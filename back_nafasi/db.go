@@ -97,6 +97,107 @@ func InitSchema(db *sql.DB) error {
 			token_hash TEXT UNIQUE NOT NULL,
 			created_at TIMESTAMPTZ DEFAULT NOW(),
 			expires_at TIMESTAMPTZ NOT NULL
+		()`,
+		// Rental tables
+		`CREATE TABLE IF NOT EXISTS properties (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			name TEXT NOT NULL,
+			address TEXT NOT NULL,
+			units INT DEFAULT 0,
+			occupied INT DEFAULT 0,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+		`CREATE TABLE IF NOT EXISTS tenants (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			name TEXT NOT NULL,
+			email TEXT,
+			phone TEXT,
+			property_id UUID REFERENCES properties(id) ON DELETE CASCADE,
+			created_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+		`CREATE TABLE IF NOT EXISTS payments (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
+			amount DECIMAL(10,2),
+			status TEXT DEFAULT 'pending',
+			due_date DATE,
+			paid_date DATE,
+			created_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+		`CREATE TABLE IF NOT EXISTS maintenance_requests (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			property_id UUID REFERENCES properties(id) ON DELETE CASCADE,
+			description TEXT,
+			priority TEXT DEFAULT 'normal',
+			status TEXT DEFAULT 'open',
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+		// Inventory tables
+		`CREATE TABLE IF NOT EXISTS warehouses (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			name TEXT NOT NULL,
+			location TEXT,
+			capacity INT DEFAULT 0,
+			used INT DEFAULT 0,
+			created_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+		`CREATE TABLE IF NOT EXISTS products (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			sku TEXT UNIQUE,
+			name TEXT NOT NULL,
+			quantity INT DEFAULT 0,
+			unit_price DECIMAL(10,2),
+			warehouse_id UUID REFERENCES warehouses(id) ON DELETE CASCADE,
+			created_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+		`CREATE TABLE IF NOT EXISTS movements (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+			from_warehouse UUID REFERENCES warehouses(id),
+			to_warehouse UUID REFERENCES warehouses(id),
+			quantity INT,
+			movement_type TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+		// Booking tables
+		`CREATE TABLE IF NOT EXISTS spaces (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			name TEXT NOT NULL,
+			location TEXT,
+			capacity INT,
+			price_per_day DECIMAL(10,2),
+			status TEXT DEFAULT 'available',
+			created_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+		`CREATE TABLE IF NOT EXISTS bookings (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			space_id UUID REFERENCES spaces(id) ON DELETE CASCADE,
+			guest_name TEXT,
+			start_date DATE,
+			end_date DATE,
+			status TEXT DEFAULT 'confirmed',
+			total DECIMAL(10,2),
+			created_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+		`CREATE TABLE IF NOT EXISTS earnings (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			space_id UUID REFERENCES spaces(id) ON DELETE CASCADE,
+			booking_id UUID REFERENCES bookings(id) ON DELETE CASCADE,
+			amount DECIMAL(10,2),
+			period TEXT,
+			created_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+		// Notifications table
+		`CREATE TABLE IF NOT EXISTS notifications (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+			title TEXT,
+			message TEXT,
+			type TEXT,
+			read BOOLEAN DEFAULT FALSE,
+			created_at TIMESTAMPTZ DEFAULT NOW()
 		)`,
 	}
 
