@@ -272,6 +272,27 @@ func (s *AuthService) userFromToken(ctx context.Context, token string) (string, 
 	return userID, name, email, nil
 }
 
+func (s *AuthService) HandleLogout(w http.ResponseWriter, r *http.Request) {
+	token, err := bearerToken(r)
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid token")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	_, err = s.db.ExecContext(ctx, `
+		DELETE FROM sessions WHERE token_hash = $1
+	`, hashToken(token))
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "logout failed")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "logged out successfully"})
+}
+
 func bearerToken(r *http.Request) (string, error) {
 	auth := r.Header.Get("Authorization")
 	if auth == "" {

@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import './globals.css';
 import Sidebar from './components/sidebar';
 import NavBar from './components/nav_bar';
@@ -21,6 +21,7 @@ type NavItem = {
   label: string;
   short: string;
   href: string;
+  icon?: string;
 };
 
 const NAV_ITEMS: Record<ServiceContext, NavItem[]> = {
@@ -53,16 +54,39 @@ const CONTEXT_META: Record<ServiceContext, { label: string; color: string; dot: 
   spaces: { label: 'Spaces', color: 'var(--spaces-color)', dot: '#1A4A8A' },
 };
 
-const MOCK_USER: UserProfile = {
-  name: 'James Mwangi',
-  email: 'james@karibu.co.ke',
-  avatar: 'JM',
+const DEFAULT_USER: UserProfile = {
+  name: 'User',
+  email: 'user@example.com',
+  avatar: 'U',
   contexts: ['rental', 'inventory', 'spaces'],
   activeContext: 'rental',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserProfile>(MOCK_USER);
+  const [user, setUser] = useState<UserProfile>(DEFAULT_USER);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch('/api/auth/me', { credentials: 'include' });
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(prev => ({
+            ...prev,
+            name: userData.name || userData.email || 'User',
+            email: userData.email || 'user@example.com',
+            avatar: (userData.name || 'U').substring(0, 1).toUpperCase(),
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to fetch user:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchUser();
+  }, []);
 
   const setActiveContext = (ctx: ServiceContext) => {
     setUser(current => ({ ...current, activeContext: ctx }));

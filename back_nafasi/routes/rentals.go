@@ -294,3 +294,104 @@ func (s *RentalService) HandleCreateMaintenance(w http.ResponseWriter, r *http.R
 
 	respondJSON(w, http.StatusCreated, map[string]string{"id": id, "message": "maintenance request created"})
 }
+
+// Delete handlers
+func (s *RentalService) HandleDeleteProperty(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		respondError(w, http.StatusBadRequest, "id required")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	result, err := s.db.ExecContext(ctx, "DELETE FROM properties WHERE id = $1", id)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to delete property")
+		return
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		respondError(w, http.StatusNotFound, "property not found")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "property deleted"})
+}
+
+func (s *RentalService) HandleDeleteTenant(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		respondError(w, http.StatusBadRequest, "id required")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	result, err := s.db.ExecContext(ctx, "DELETE FROM tenants WHERE id = $1", id)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to delete tenant")
+		return
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		respondError(w, http.StatusNotFound, "tenant not found")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "tenant deleted"})
+}
+
+func (s *RentalService) HandleDeletePayment(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		respondError(w, http.StatusBadRequest, "id required")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	result, err := s.db.ExecContext(ctx, "DELETE FROM payments WHERE id = $1", id)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to delete payment")
+		return
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		respondError(w, http.StatusNotFound, "payment not found")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "payment deleted"})
+}
+
+func (s *RentalService) HandleDeleteMaintenance(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		respondError(w, http.StatusBadRequest, "id required")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	result, err := s.db.ExecContext(ctx, "DELETE FROM maintenance_requests WHERE id = $1", id)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to delete maintenance request")
+		return
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		respondError(w, http.StatusNotFound, "maintenance request not found")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "maintenance request deleted"})
+}

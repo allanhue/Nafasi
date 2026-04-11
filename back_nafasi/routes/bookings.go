@@ -224,3 +224,79 @@ func (s *BookingService) HandleCreateEarning(w http.ResponseWriter, r *http.Requ
 
 	respondJSON(w, http.StatusCreated, map[string]string{"id": id, "message": "earning recorded"})
 }
+
+// Delete handlers
+func (s *BookingService) HandleDeleteSpace(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		respondError(w, http.StatusBadRequest, "id parameter required")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	result, err := s.db.ExecContext(ctx, "DELETE FROM spaces WHERE id = $1", id)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to delete space")
+		return
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil || rows == 0 {
+		respondError(w, http.StatusNotFound, "space not found")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "space deleted"})
+}
+
+func (s *BookingService) HandleDeleteBooking(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		respondError(w, http.StatusBadRequest, "id parameter required")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	result, err := s.db.ExecContext(ctx, "DELETE FROM bookings WHERE id = $1", id)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to delete booking")
+		return
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil || rows == 0 {
+		respondError(w, http.StatusNotFound, "booking not found")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "booking deleted"})
+}
+
+func (s *BookingService) HandleDeleteEarning(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		respondError(w, http.StatusBadRequest, "id parameter required")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	result, err := s.db.ExecContext(ctx, "DELETE FROM earnings WHERE id = $1", id)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to delete earning")
+		return
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil || rows == 0 {
+		respondError(w, http.StatusNotFound, "earning not found")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "earning deleted"})
+}

@@ -222,3 +222,79 @@ func (s *InventoryService) HandleCreateMovement(w http.ResponseWriter, r *http.R
 
 	respondJSON(w, http.StatusCreated, map[string]string{"id": id, "message": "movement created"})
 }
+
+// Delete handlers
+func (s *InventoryService) HandleDeleteWarehouse(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		respondError(w, http.StatusBadRequest, "id parameter required")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	result, err := s.db.ExecContext(ctx, "DELETE FROM warehouses WHERE id = $1", id)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to delete warehouse")
+		return
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil || rows == 0 {
+		respondError(w, http.StatusNotFound, "warehouse not found")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "warehouse deleted"})
+}
+
+func (s *InventoryService) HandleDeleteProduct(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		respondError(w, http.StatusBadRequest, "id parameter required")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	result, err := s.db.ExecContext(ctx, "DELETE FROM products WHERE id = $1", id)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to delete product")
+		return
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil || rows == 0 {
+		respondError(w, http.StatusNotFound, "product not found")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "product deleted"})
+}
+
+func (s *InventoryService) HandleDeleteMovement(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		respondError(w, http.StatusBadRequest, "id parameter required")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	result, err := s.db.ExecContext(ctx, "DELETE FROM movements WHERE id = $1", id)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to delete movement")
+		return
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil || rows == 0 {
+		respondError(w, http.StatusNotFound, "movement not found")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "movement deleted"})
+}
