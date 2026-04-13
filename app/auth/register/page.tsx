@@ -82,7 +82,7 @@ export default function RegisterPage() {
             />
           </div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Email</label>
+            <label style={{ fontSize: 12,fontWeight: 600, color: 'var(--text-secondary)' }}>Email</label>
             <input
               className="input"
               placeholder="you@company.com"
@@ -93,7 +93,7 @@ export default function RegisterPage() {
             />
           </div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Password</label>
+            <label style={{ fontSize: 12,fontWeight: 600, color: 'var(--text-secondary)' }}>Password</label>
             <input
               className="input"
               type="password"

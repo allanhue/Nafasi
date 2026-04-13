@@ -3,6 +3,30 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { 
+  LayoutDashboard, 
+  Home, 
+  Users, 
+  CircleDollarSign, 
+  Wrench, 
+  Package, 
+  ClipboardList, 
+  RefreshCw, 
+  Target, 
+  Calendar, 
+  Banknote, 
+  BarChart3, 
+  Bell, 
+  Settings, 
+  User, 
+  LogOut,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  Building2,
+  Boxes,
+  MapPin
+} from 'lucide-react';
 import { clearSession } from '../lib/session';
 
 type ServiceContext = 'rental' | 'inventory' | 'spaces';
@@ -19,34 +43,43 @@ type NavItem = {
   label: string;
   short: string;
   href: string;
-  icon: string;
 };
 
-type ContextMeta = Record<ServiceContext, { label: string; color: string; dot: string; icon: string }>;
+// Updated Meta to use Lucide Components
+type ContextMeta = Record<ServiceContext, { label: string; color: string; icon: any }>;
+
+const CONTEXT_META_CONFIG: ContextMeta = {
+  rental: { label: 'Rentals', color: '#3b82f6', icon: Building2 },
+  inventory: { label: 'Inventory', color: '#10b981', icon: Boxes },
+  spaces: { label: 'Spaces', color: '#f59e0b', icon: MapPin },
+};
 
 function ContextSwitcher({
   user,
-  contextMeta,
   onSwitch,
 }: {
   user: UserProfile;
-  contextMeta: ContextMeta;
   onSwitch: (ctx: ServiceContext) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const meta = contextMeta[user.activeContext];
+  const meta = CONTEXT_META_CONFIG[user.activeContext];
+  const Icon = meta.icon;
 
   return (
     <div className="context-switcher">
       <button className="context-trigger" onClick={() => setOpen(value => !value)}>
-        <span className="text-2xl">{meta.icon}</span>
+        <Icon size={20} />
         <span className="context-label" style={{ color: meta.color }}>{meta.label}</span>
-        <span className="context-caret">{open ? '▲' : '▼'}</span>
+        <span className="context-caret">
+          {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        </span>
       </button>
+      
       {open && (
         <div className="context-menu">
           {user.contexts.map(ctx => {
-            const item = contextMeta[ctx];
+            const item = CONTEXT_META_CONFIG[ctx];
+            const ItemIcon = item.icon;
             return (
               <button
                 key={ctx}
@@ -56,9 +89,9 @@ function ContextSwitcher({
                   setOpen(false);
                 }}
               >
-                <span className="text-lg">{item.icon}</span>
-                {item.label}
-                {ctx === user.activeContext ? <span>✓</span> : null}
+                <ItemIcon size={18} />
+                <span className="flex-1 text-left">{item.label}</span>
+                {ctx === user.activeContext && <Check size={14} />}
               </button>
             );
           })}
@@ -71,12 +104,10 @@ function ContextSwitcher({
 export default function Sidebar({
   user,
   navItems,
-  contextMeta,
   onContextChange,
 }: {
   user: UserProfile;
   navItems: NavItem[];
-  contextMeta: ContextMeta;
   onContextChange: (ctx: ServiceContext) => void;
 }) {
   const pathname = usePathname();
@@ -88,19 +119,20 @@ export default function Sidebar({
     router.push('/auth/login');
   };
 
-  const iconMap: Record<string, string> = {
-    'Dashboard': '📊',
-    'Properties': '🏠',
-    'Tenants': '👥',
-    'Payments': '💰',
-    'Maintenance': '🔧',
-    'Warehouses': '📦',
-    'Inventory': '📋',
-    'Movements': '🔄',
-    'Bookings': '🎯',
-    'Calendar': '📅',
-    'Earnings': '💵',
-    'Reports': '📈',
+  // Modern Icon Mapping
+  const iconMap: Record<string, any> = {
+    'Dashboard': LayoutDashboard,
+    'Properties': Home,
+    'Tenants': Users,
+    'Payments': CircleDollarSign,
+    'Maintenance': Wrench,
+    'Warehouses': Package,
+    'Inventory': ClipboardList,
+    'Movements': RefreshCw,
+    'Bookings': Target,
+    'Calendar': Calendar,
+    'Earnings': Banknote,
+    'Reports': BarChart3,
   };
 
   return (
@@ -110,19 +142,21 @@ export default function Sidebar({
           <span className="brand-mark">N</span>
           <span className="brand-name">nafasi</span>
         </Link>
-        <ContextSwitcher user={user} contextMeta={contextMeta} onSwitch={onContextChange} />
+        <ContextSwitcher user={user} onSwitch={onContextChange} />
       </div>
 
       <nav className="sidebar-nav">
         {navItems.map(item => {
+          const Icon = iconMap[item.label] || Target;
           const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+          
           return (
             <Link
               key={item.href}
               href={item.href}
               className={`nav-link${active ? ' active' : ''}`}
             >
-              <span className="nav-icon">{iconMap[item.label] || '◆'}</span>
+              <Icon size={20} className="nav-icon" />
               <span>{item.label}</span>
             </Link>
           );
@@ -131,24 +165,26 @@ export default function Sidebar({
         <div className="sidebar-divider" />
 
         <Link href="/notifications" className="nav-link">
-          <span className="nav-icon">🔔</span>
+          <Bell size={20} className="nav-icon" />
           <span>Notifications</span>
         </Link>
 
         <Link href="/reports" className="nav-link">
-          <span className="nav-icon">📈</span>
+          <BarChart3 size={20} className="nav-icon" />
           <span>Reports</span>
         </Link>
 
         <Link href="/profile" className="nav-link">
-          <span className="nav-icon">⚙️</span>
+          <Settings size={20} className="nav-icon" />
           <span>Settings</span>
         </Link>
       </nav>
 
       <div className="sidebar-footer">
         <div className="user-profile-mini">
-          <div className="avatar">{user.avatar}</div>
+          <div className="avatar">
+            {user.avatar ? <img src={user.avatar} alt={user.name} /> : <User size={20} />}
+          </div>
           <div className="user-meta">
             <p className="user-name">{user.name}</p>
             <p className="user-email">{user.email}</p>
@@ -156,22 +192,21 @@ export default function Sidebar({
         </div>
         
         <div style={{ display: 'flex', gap: '8px' }}>
-          <Link href="/profile" className="icon-button" aria-label="Open profile" title="Profile">
-            👤
+          <Link href="/profile" className="icon-button" title="Profile">
+            <User size={18} />
           </Link>
           <button
             className="icon-button logout-button"
-            aria-label="Logout"
             title="Logout"
             onClick={() => setShowLogoutConfirm(true)}
           >
-            🚪
+            <LogOut size={18} />
           </button>
         </div>
 
         {showLogoutConfirm && (
           <div className="logout-confirm">
-            <p>Are you sure you want to logout?</p>
+            <p>Are you sure?</p>
             <div className="confirm-buttons">
               <button onClick={handleLogout} className="btn-primary">Logout</button>
               <button onClick={() => setShowLogoutConfirm(false)} className="btn-secondary">Cancel</button>

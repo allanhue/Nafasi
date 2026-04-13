@@ -48,11 +48,6 @@ func connectDatabase() (*sql.DB, error) {
 		return nil, err
 	}
 
-	// Commented out: seedOwner already seeded via environment variables
-	// if err := seedOwner(db); err != nil {
-	// 	db.Close()
-	// 	return nil, err
-	// }
 
 	return db, nil
 }

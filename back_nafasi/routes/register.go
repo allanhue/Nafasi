@@ -6,7 +6,7 @@ import (
 )
 
 func Register(mux *http.ServeMux, db *sql.DB) {
-	// Health check
+	// Health check to go functions  api
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		respondJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
