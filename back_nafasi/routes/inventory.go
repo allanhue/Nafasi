@@ -62,12 +62,12 @@ func (s *InventoryService) HandleGetWarehouses(w http.ResponseWriter, r *http.Re
 
 	var warehouses []Warehouse
 	for rows.Next() {
-		var w Warehouse
-		if err := rows.Scan(&w.ID, &w.Name, &w.Location, &w.Capacity, &w.Used, &w.CreatedAt); err != nil {
+		var warehouse Warehouse
+		if err := rows.Scan(&warehouse.ID, &warehouse.Name, &warehouse.Location, &warehouse.Capacity, &warehouse.Used, &warehouse.CreatedAt); err != nil {
 			respondError(w, http.StatusInternalServerError, "scanning error")
 			return
 		}
-		warehouses = append(warehouses, w)
+		warehouses = append(warehouses, warehouse)
 	}
 
 	respondJSON(w, http.StatusOK, warehouses)

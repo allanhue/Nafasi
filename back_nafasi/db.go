@@ -92,7 +92,7 @@ func InitSchema(db *sql.DB) error {
 			token_hash TEXT UNIQUE NOT NULL,
 			created_at TIMESTAMPTZ DEFAULT NOW(),
 			expires_at TIMESTAMPTZ NOT NULL
-		()`,
+		)`,
 		// Rental tables
 		`CREATE TABLE IF NOT EXISTS properties (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
