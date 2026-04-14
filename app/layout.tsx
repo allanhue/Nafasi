@@ -7,7 +7,7 @@ import Sidebar from './components/sidebar';
 import NavBar from './components/nav_bar';
 import Footer from './components/footer';
 import { usePathname, useRouter } from 'next/navigation';
-import { readSession } from './lib/session';
+import { clearSession, readSession, writeSession } from './lib/session';
 import { ROLES } from './lib/roles';
 
 type ServiceContext = 'rental' | 'inventory' | 'spaces' | 'admin';
@@ -30,14 +30,14 @@ type NavItem = {
 const NAV_ITEMS: Record<ServiceContext, NavItem[]> = {
   rental: [
     { label: 'Dashboard', short: 'DB', href: '/dashboard' },
-    { label: 'Properties', short: 'PR', href: '/rentals' },
+    { label: 'Properties', short: 'PR', href: '/rentals/properties' },
     { label: 'Tenants', short: 'TN', href: '/rentals/tenants' },
     { label: 'Payments', short: 'PY', href: '/rentals/payments' },
     { label: 'Maintenance', short: 'MT', href: '/rentals/maintenance' },
   ],
   inventory: [
     { label: 'Dashboard', short: 'DB', href: '/dashboard' },
-    { label: 'Inventory', short: 'IV', href: '/inventory' },
+    { label: 'Products', short: 'PR', href: '/inventory/products' },
     { label: 'Warehouses', short: 'WH', href: '/inventory/warehouses' },
     { label: 'Movements', short: 'MV', href: '/inventory/movements' },
     { label: 'Reports', short: 'RP', href: '/inventory/reports' },
@@ -79,8 +79,17 @@ const DEFAULT_USER: UserProfile = {
   activeContext: 'rental',
 };
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  'http://localhost:8080';
+
 const STORAGE_ACTIVE_CONTEXT = 'nafasi_active_context';
 const lastPathKey = (ctx: ServiceContext) => `nafasi_last_path_${ctx}`;
+const isPublicRoute = (pathname: string | null) => {
+  if (!pathname) return true;
+  return pathname.startsWith('/auth/') || pathname === '/register';
+};
 
 function inferContextFromPath(pathname: string | null): ServiceContext | null {
   if (!pathname) return null;
@@ -117,37 +126,81 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const syncFromSession = (role: string | null | undefined, sessionName?: string, sessionEmail?: string) => {
+      const inferred = inferContextFromPath(pathname);
+
+      const allowed = new Set<ServiceContext>(allowedContextsForRole(role));
+      if (inferred === 'admin') allowed.add('admin');
+
+      const ordered: ServiceContext[] = ['admin', 'rental', 'inventory', 'spaces'];
+      const contexts = ordered.filter((ctx) => allowed.has(ctx));
+      const saved = typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_ACTIVE_CONTEXT) : null;
+
+      const preferred =
+        (saved as ServiceContext | null) && contexts.includes(saved as ServiceContext)
+          ? (saved as ServiceContext)
+          : inferred && contexts.includes(inferred)
+            ? inferred
+            : contexts[0] || DEFAULT_USER.activeContext;
+
+      const displayName = sessionName || sessionEmail || DEFAULT_USER.name;
+      const email = sessionEmail || DEFAULT_USER.email;
+
+      setUser(prev => ({
+        ...prev,
+        name: displayName,
+        email,
+        avatar: (displayName || 'U').substring(0, 1).toUpperCase(),
+        contexts,
+        activeContext: preferred,
+      }));
+    };
+
     const session = readSession();
-    const role = session?.role;
-    const inferred = inferContextFromPath(pathname);
+    if (!session?.token) {
+      syncFromSession(null);
+      setIsLoading(false);
+      return;
+    }
 
-    const allowed = new Set<ServiceContext>(allowedContextsForRole(role));
-    if (inferred === 'admin') allowed.add('admin');
+    // Validate session + hydrate roles from the API so UI matches backend.
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${session.token}` },
+          signal: controller.signal,
+        });
 
-    const ordered: ServiceContext[] = ['admin', 'rental', 'inventory', 'spaces'];
-    const contexts = ordered.filter((ctx) => allowed.has(ctx));
-    const saved = typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_ACTIVE_CONTEXT) : null;
+        if (!response.ok) {
+          if (!isPublicRoute(pathname)) {
+            clearSession();
+            router.replace('/auth/login');
+          }
+          syncFromSession(null);
+          return;
+        }
 
-    const preferred =
-      (saved as ServiceContext | null) && contexts.includes(saved as ServiceContext)
-        ? (saved as ServiceContext)
-        : inferred && contexts.includes(inferred)
-          ? inferred
-          : contexts[0] || DEFAULT_USER.activeContext;
+        const me = (await response.json()) as { id: string; name: string; email: string; roles?: string[] };
+        const roles = Array.isArray(me.roles) ? me.roles : [];
+        const role = roles.includes('superadmin') ? ROLES.SYSTEM_ADMIN : roles[0] || ROLES.USER;
 
-    const displayName = session?.user?.name || session?.user?.email || DEFAULT_USER.name;
-    const email = session?.user?.email || DEFAULT_USER.email;
+        writeSession({
+          token: session.token,
+          user: { id: me.id, name: me.name, email: me.email, roles },
+          role,
+        });
 
-    setUser(prev => ({
-      ...prev,
-      name: displayName,
-      email,
-      avatar: (displayName || 'U').substring(0, 1).toUpperCase(),
-      contexts,
-      activeContext: preferred,
-    }));
+        syncFromSession(role, me.name, me.email);
+      } catch {
+        // Network failure: keep local session but don't block rendering forever.
+        syncFromSession(session.role, session.user?.name, session.user?.email);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
 
-    setIsLoading(false);
+    return () => controller.abort();
   }, [pathname]);
 
   useEffect(() => {

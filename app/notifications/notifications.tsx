@@ -1,100 +1,132 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { readSession } from '../lib/session';
 
 type Notification = {
   id: string;
+  user_id: string;
   title: string;
   message: string;
-  type: 'info' | 'warning' | 'error' | 'success';
-  timestamp: string;
+  type: 'info' | 'warning' | 'error' | 'success' | string;
   read: boolean;
+  created_at: string;
 };
 
-const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: '1',
-    title: 'Payment Received',
-    message: 'Rent payment from Unit 5 received',
-    type: 'success',
-    timestamp: '2 hours ago',
-    read: false,
-  },
-  {
-    id: '2',
-    title: 'Maintenance Request',
-    message: 'New maintenance request for Unit 3',
-    type: 'warning',
-    timestamp: 'Yesterday',
-    read: true,
-  },
-  {
-    id: '3',
-    title: 'Overdue Payment',
-    message: 'Unit 7 rent payment is overdue',
-    type: 'error',
-    timestamp: '3 days ago',
-    read: true,
-  },
-];
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  'http://localhost:8080';
+
+const typeBadge = (type: string) => {
+  switch (type) {
+    case 'success':
+      return 'badge badge-success';
+    case 'warning':
+      return 'badge badge-warning';
+    case 'error':
+      return 'badge badge-danger';
+    case 'info':
+      return 'badge badge-info';
+    default:
+      return 'badge badge-muted';
+  }
+};
 
 export default function NotificationsComponent() {
-  const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const markAsRead = (id: string) => {
-    setNotifications(current =>
-      current.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
-    );
+  const fetchNotifications = async () => {
+    const session = readSession();
+    if (!session?.token) {
+      setNotifications([]);
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/notifications`, {
+        headers: { Authorization: `Bearer ${session.token}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch notifications');
+      const data = await res.json();
+      setNotifications(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const clearAll = () => {
-    setNotifications([]);
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const markAsRead = async (id: string) => {
+    const session = readSession();
+
+    setError('');
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/notifications/read?id=${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: session?.token ? { Authorization: `Bearer ${session.token}` } : undefined,
+      });
+      if (!res.ok) throw new Error('Failed to mark as read');
+      setNotifications(current => current.map(n => (n.id === id ? { ...n, read: true } : n)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    }
   };
 
   return (
-    <div className="notification-center">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold">Notifications</h2>
-        {notifications.length > 0 && (
-          <button
-            onClick={clearAll}
-            className="text-sm text-gray-500 hover:text-gray-700"
-          >
-            Clear all
-          </button>
-        )}
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16 }}>Notifications</h2>
+        <button className="btn btn-ghost btn-sm" type="button" onClick={fetchNotifications} disabled={loading}>
+          {loading ? 'Refreshing…' : 'Refresh'}
+        </button>
       </div>
 
+      {error ? <div className="alert alert-error">{error}</div> : null}
+
       {notifications.length === 0 ? (
-        <p className="text-gray-500 text-center py-8">No notifications</p>
+        <div className="empty-state">
+          <div className="empty-state-icon">BT</div>
+          <h3>No notifications</h3>
+          <p>{loading ? 'Loading…' : 'You are all caught up.'}</p>
+        </div>
       ) : (
-        <div className="space-y-2">
-          {notifications.map(notif => (
-            <div
-              key={notif.id}
-              className={`p-4 rounded-lg border-l-4 cursor-pointer ${
-                notif.read ? 'bg-gray-50' : 'bg-white'
-              } ${
-                notif.type === 'success'
-                  ? 'border-green-500'
-                  : notif.type === 'warning'
-                    ? 'border-yellow-500'
-                    : notif.type === 'error'
-                      ? 'border-red-500'
-                      : 'border-blue-500'
-              }`}
-              onClick={() => markAsRead(notif.id)}
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-semibold text-sm">{notif.title}</h3>
-                  <p className="text-sm text-gray-600 mt-1">{notif.message}</p>
+        <div style={{ display: 'grid', gap: 10 }}>
+          {notifications.map((notif) => {
+            const createdAt = notif.created_at ? new Date(notif.created_at).toLocaleString() : '';
+
+            return (
+              <div key={notif.id} className="grid-card" style={{ opacity: notif.read ? 0.85 : 1 }}>
+                <div className="card-header">
+                  <div>
+                    <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {notif.title}
+                      <span className={typeBadge(String(notif.type))}>{String(notif.type || 'info')}</span>
+                      {!notif.read ? <span className="badge badge-info">new</span> : null}
+                    </div>
+                    <div className="card-subtitle">{createdAt}</div>
+                  </div>
+                  {!notif.read ? (
+                    <button className="btn btn-ghost btn-sm" type="button" onClick={() => markAsRead(notif.id)}>
+                      Mark read
+                    </button>
+                  ) : null}
                 </div>
-                {!notif.read && <div className="w-2 h-2 bg-blue-500 rounded-full mt-1" />}
+                <div style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.55 }}>
+                  {notif.message}
+                </div>
               </div>
-              <p className="text-xs text-gray-500 mt-2">{notif.timestamp}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

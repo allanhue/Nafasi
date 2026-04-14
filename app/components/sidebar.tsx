@@ -21,7 +21,7 @@ import {
   User, 
   LogOut
 } from 'lucide-react';
-import { clearSession } from '../lib/session';
+import { clearSession, readSession } from '../lib/session';
 
 type ServiceContext = 'rental' | 'inventory' | 'spaces' | 'admin';
 
@@ -54,9 +54,27 @@ export default function Sidebar({
   const router = useRouter();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const handleLogout = () => {
-    clearSession();
-    router.push('/auth/login');
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_BACKEND_URL ||
+    'http://localhost:8080';
+
+  const handleLogout = async () => {
+    const session = readSession();
+
+    try {
+      if (session?.token) {
+        await fetch(`${API_BASE_URL}/auth/logout`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${session.token}` },
+        });
+      }
+    } catch {
+      // Best-effort logout; still clear local session.
+    } finally {
+      clearSession();
+      router.push('/auth/login');
+    }
   };
 
   const iconMap: Record<string, any> = {
@@ -67,6 +85,7 @@ export default function Sidebar({
     'Maintenance': Wrench,
     'Warehouses': Package,
     'Inventory': ClipboardList,
+    'Products': ClipboardList,
     'Movements': RefreshCw,
     'Bookings': Target,
     'Calendar': Calendar,
@@ -122,17 +141,23 @@ export default function Sidebar({
 
         <div className="sidebar-divider" />
 
-        <Link href="/notifications" className="nav-link">
+        <Link href="/notifications" className={`nav-link${pathname === '/notifications' ? ' active' : ''}`}>
           <Bell size={20} className="nav-icon" />
           <span>Notifications</span>
         </Link>
 
-        <Link href="/reports" className="nav-link">
+        <Link
+          href="/reports"
+          className={`nav-link${pathname === '/reports' || pathname.startsWith('/reports/') ? ' active' : ''}`}
+        >
           <BarChart3 size={20} className="nav-icon" />
           <span>Reports</span>
         </Link>
 
-        <Link href="/profile" className="nav-link">
+        <Link
+          href="/profile"
+          className={`nav-link${pathname === '/profile' || pathname.startsWith('/profile/') ? ' active' : ''}`}
+        >
           <Settings size={20} className="nav-icon" />
           <span>Settings</span>
         </Link>

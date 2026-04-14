@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -26,10 +27,26 @@ type Notification struct {
 }
 
 func (s *NotificationService) HandleGetNotifications(w http.ResponseWriter, r *http.Request) {
-	userID := r.Header.Get("X-User-ID")
+	userID := strings.TrimSpace(r.Header.Get("X-User-ID"))
 	if userID == "" {
-		respondError(w, http.StatusUnauthorized, "user id required")
-		return
+		// Backwards-compatible: accept either `X-User-ID` or bearer auth.
+		token, err := bearerToken(r)
+		if err != nil {
+			respondError(w, http.StatusUnauthorized, "user id required")
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+		defer cancel()
+
+		if err := s.db.QueryRowContext(ctx, `
+			SELECT user_id
+			FROM sessions
+			WHERE token_hash = $1 AND expires_at > now()
+		`, hashToken(token)).Scan(&userID); err != nil {
+			respondError(w, http.StatusUnauthorized, "invalid session")
+			return
+		}
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)

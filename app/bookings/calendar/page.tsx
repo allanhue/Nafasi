@@ -1,10 +1,12 @@
 export default function CalendarPage() {
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Booking Calendar</h1>
-      <div className="bg-white rounded-lg shadow p-6">
-        <p className="text-gray-600">View bookings in calendar view</p>
-        {/* Add calendar visualization here */}
+    <div>
+      <div className="page-header">
+        <h1>Booking Calendar</h1>
+        <p>See bookings in a calendar view.</p>
+      </div>
+      <div className="card">
+        <p style={{ color: 'var(--text-secondary)' }}>Calendar view goes here.</p>
       </div>
     </div>
   );
