@@ -2,21 +2,21 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { Bell, ChevronDown } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-type ServiceContext = 'rental' | 'inventory' | 'spaces';
+type ServiceContext = 'rental' | 'inventory' | 'spaces' | 'admin';
 
 type UserProfile = {
   avatar: string;
   name: string;
 };
 
-const CONTEXTS: ServiceContext[] = ['rental', 'inventory', 'spaces'];
-
-const CONTEXT_META: Record<ServiceContext, { label: string; color: string }> = {
-  rental:    { label: 'Rentals',   color: '#3b82f6' },
-  inventory: { label: 'Inventory', color: '#10b981' },
-  spaces:    { label: 'Spaces',    color: '#f59e0b' },
+const CONTEXT_META: Record<ServiceContext, { label: string; color: string; hint: string }> = {
+  rental: { label: 'Rentals', color: 'var(--rental-color)', hint: 'Leases, tenants, payments' },
+  inventory: { label: 'Inventory', color: 'var(--inventory-color)', hint: 'Stock, warehouses, movements' },
+  spaces: { label: 'Spaces', color: 'var(--spaces-color)', hint: 'Bookings, calendar, earnings' },
+  admin: { label: 'Admin', color: 'var(--admin-color)', hint: 'Platform oversight' },
 };
 
 function formatTitle(pathname: string) {
@@ -31,24 +31,72 @@ function formatTitle(pathname: string) {
 
 export default function NavBar({
   user,
+  contexts,
   activeContext,
   onContextChange,
+  isLoading,
 }: {
-
   user: UserProfile;
+  contexts: ServiceContext[];
   activeContext: ServiceContext;
   onContextChange: (ctx: ServiceContext) => void;
-  
+  isLoading?: boolean;
 }) {
   const pathname = usePathname();
   const pageTitle = formatTitle(pathname);
 
-  const safeContext: ServiceContext = CONTEXTS.includes(activeContext) ? activeContext : 'rental';
-  const meta = CONTEXT_META[safeContext];
-  const currentIdx = CONTEXTS.indexOf(safeContext);
+  const safeContext: ServiceContext = contexts.includes(activeContext)
+    ? activeContext
+    : contexts[0] || 'rental';
 
-  const prev = () => onContextChange(CONTEXTS[(currentIdx - 1 + CONTEXTS.length) % CONTEXTS.length]);
-  const next = () => onContextChange(CONTEXTS[(currentIdx + 1) % CONTEXTS.length]);
+  const meta = CONTEXT_META[safeContext] || CONTEXT_META.rental;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  const cycleContext = useCallback(
+    (direction: 1 | -1) => {
+      if (contexts.length < 2) return;
+      const idx = Math.max(0, contexts.indexOf(safeContext));
+      const next = contexts[(idx + direction + contexts.length) % contexts.length];
+      onContextChange(next);
+    },
+    [contexts, onContextChange, safeContext],
+  );
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+
+      // Alt+M cycles workspaces; hold Shift to reverse.
+      if (event.altKey && event.key.toLowerCase() === 'm') {
+        event.preventDefault();
+        cycleContext(event.shiftKey ? -1 : 1);
+        setMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [cycleContext]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const onDocClick = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (!menuRef.current) return;
+      if (!menuRef.current.contains(target)) setMenuOpen(false);
+    };
+
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [menuOpen]);
+
+  const titleRight = useMemo(() => {
+    if (isLoading) return 'Loading…';
+    return user.name || 'User';
+  }, [isLoading, user.name]);
 
   return (
     <header className="topbar">
@@ -57,20 +105,54 @@ export default function NavBar({
       </div>
 
       <div className="topbar-actions">
-        {/* Vertical mode switcher */}
-        <div className="mode-switcher">
-          <button className="mode-arrow" onClick={next} aria-label="Next mode">
-            <ChevronUp size={13} />
-          </button>
-          <div className="mode-display">
-            <span className="mode-dot" style={{ background: meta.color }} />
-            <span className="mode-label" style={{ color: meta.color }}>
-              {meta.label}
+        <div className="workspace-switch" ref={menuRef}>
+          <button
+            type="button"
+            className="workspace-button"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(open => !open)}
+            title="Switch workspace (Alt+M)"
+          >
+            <span className={`context-tag context-${safeContext}`}>
+              <span className="workspace-dot" style={{ background: meta.color }} />
+              <span className="workspace-title">{meta.label}</span>
             </span>
-          </div>
-          <button className="mode-arrow" onClick={prev} aria-label="Previous mode">
-            <ChevronDown size={13} />
+            <ChevronDown size={14} />
           </button>
+
+          {menuOpen ? (
+            <div className="workspace-menu" role="menu" aria-label="Workspace menu">
+              {contexts.map((ctx) => {
+                const itemMeta = CONTEXT_META[ctx] || CONTEXT_META.rental;
+                const active = ctx === safeContext;
+
+                return (
+                  <button
+                    key={ctx}
+                    type="button"
+                    role="menuitem"
+                    className={`workspace-item${active ? ' active' : ''}`}
+                    onClick={() => {
+                      onContextChange(ctx);
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <span className="workspace-item-left">
+                      <span className="workspace-dot" style={{ background: itemMeta.color }} />
+                      <span>{itemMeta.label}</span>
+                    </span>
+                    <span className="workspace-hint">{itemMeta.hint}</span>
+                  </button>
+                );
+              })}
+              {contexts.length > 1 ? (
+                <div className="workspace-footer" aria-hidden="true">
+                  Tip: press Alt+M to switch (Shift reverses)
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <div className="topbar-search">
@@ -78,11 +160,11 @@ export default function NavBar({
         </div>
 
         <button className="icon-button" aria-label="Notifications">
-          NT
+          <Bell size={18} />
           <span className="dot" />
         </button>
 
-        <Link href="/profile" className="avatar-link" aria-label="Open profile">
+        <Link href="/profile" className="avatar-link" aria-label={`Open profile for ${titleRight}`}>
           <div className="avatar">{user.avatar}</div>
         </Link>
       </div>

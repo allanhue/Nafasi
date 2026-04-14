@@ -1,7 +1,5 @@
 // set up the roles 
 
-import { User } from "lucide-react";
-
 export const ROLES = {
     //owner 
   SYSTEM_ADMIN: 'system_admin',
@@ -12,8 +10,10 @@ export const ROLES = {
     TENANT: 'tenant',  //rents a house 
 
     //reated to space booking and management
-    SPACE_MANAGER: 'space_manager',
-    User: 'user', // buys tickets, books spaces, etc.
+  SPACE_MANAGER: 'space_manager',
+  USER: 'user', // buys tickets, books spaces, etc.
+  // Backward-compat alias (some files may still reference ROLES.User)
+  User: 'user',
 
 
 } as const; 

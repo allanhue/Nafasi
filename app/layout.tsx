@@ -1,13 +1,16 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useMemo, useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import './globals.css';
 import Sidebar from './components/sidebar';
 import NavBar from './components/nav_bar';
 import Footer from './components/footer';
+import { usePathname, useRouter } from 'next/navigation';
+import { readSession } from './lib/session';
+import { ROLES } from './lib/roles';
 
-type ServiceContext = 'rental' | 'inventory' | 'spaces';
+type ServiceContext = 'rental' | 'inventory' | 'spaces' | 'admin';
 
 type UserProfile = {
   name: string;
@@ -46,12 +49,26 @@ const NAV_ITEMS: Record<ServiceContext, NavItem[]> = {
     { label: 'Calendar', short: 'CL', href: '/bookings/calendar' },
     { label: 'Earnings', short: 'ER', href: '/bookings/earnings' },
   ],
+  admin: [
+    { label: 'Dashboard', short: 'DB', href: '/administrator/dashboard' },
+    { label: 'Payments', short: 'PY', href: '/administrator/payments' },
+    { label: 'Tickets', short: 'TK', href: '/administrator/tickets' },
+    { label: 'Calendar', short: 'CL', href: '/administrator/calendar' },
+  ],
 };
 
 const CONTEXT_META: Record<ServiceContext, { label: string; color: string; dot: string }> = {
   rental: { label: 'Rental', color: 'var(--rental-color)', dot: '#1A6B4A' },
   inventory: { label: 'Inventory', color: 'var(--inventory-color)', dot: '#A05C1A' },
   spaces: { label: 'Spaces', color: 'var(--spaces-color)', dot: '#1A4A8A' },
+  admin: { label: 'Admin', color: 'var(--admin-color)', dot: '#B91C1C' },
+};
+
+const CONTEXT_HOME: Record<ServiceContext, string> = {
+  rental: '/dashboard',
+  inventory: '/inventory',
+  spaces: '/bookings',
+  admin: '/administrator/dashboard',
 };
 
 const DEFAULT_USER: UserProfile = {
@@ -62,35 +79,114 @@ const DEFAULT_USER: UserProfile = {
   activeContext: 'rental',
 };
 
+const STORAGE_ACTIVE_CONTEXT = 'nafasi_active_context';
+const lastPathKey = (ctx: ServiceContext) => `nafasi_last_path_${ctx}`;
+
+function inferContextFromPath(pathname: string | null): ServiceContext | null {
+  if (!pathname) return null;
+  if (pathname.startsWith('/administrator')) return 'admin';
+  if (pathname.startsWith('/inventory')) return 'inventory';
+  if (pathname.startsWith('/bookings')) return 'spaces';
+  if (pathname.startsWith('/rentals')) return 'rental';
+  return null;
+}
+
+function allowedContextsForRole(role?: string | null): ServiceContext[] {
+  switch (role) {
+    case ROLES.SYSTEM_ADMIN:
+      return ['admin', 'rental', 'inventory', 'spaces'];
+    case ROLES.USER:
+      return ['rental', 'inventory', 'spaces'];
+    case ROLES.WAREHOUSE_MANAGER:
+      return ['inventory'];
+    case ROLES.SPACE_MANAGER:
+      return ['spaces'];
+    case ROLES.LANDLORD:
+      return ['rental'];
+    case ROLES.TENANT:
+      return ['rental'];
+    default:
+      return ['rental', 'inventory', 'spaces'];
+  }
+}
+
 export default function RootLayout({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
   const [user, setUser] = useState<UserProfile>(DEFAULT_USER);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch('/api/auth/me', { credentials: 'include' });
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(prev => ({
-            ...prev,
-            name: userData.name || userData.email || 'User',
-            email: userData.email || 'user@example.com',
-            avatar: (userData.name || 'U').substring(0, 1).toUpperCase(),
-          }));
-        }
-      } catch (error) {
-        console.error('Failed to fetch user:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchUser();
-  }, []);
+    const session = readSession();
+    const role = session?.role;
+    const inferred = inferContextFromPath(pathname);
 
-  const setActiveContext = (ctx: ServiceContext) => {
-    setUser(current => ({ ...current, activeContext: ctx }));
-  };
+    const allowed = new Set<ServiceContext>(allowedContextsForRole(role));
+    if (inferred === 'admin') allowed.add('admin');
+
+    const ordered: ServiceContext[] = ['admin', 'rental', 'inventory', 'spaces'];
+    const contexts = ordered.filter((ctx) => allowed.has(ctx));
+    const saved = typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_ACTIVE_CONTEXT) : null;
+
+    const preferred =
+      (saved as ServiceContext | null) && contexts.includes(saved as ServiceContext)
+        ? (saved as ServiceContext)
+        : inferred && contexts.includes(inferred)
+          ? inferred
+          : contexts[0] || DEFAULT_USER.activeContext;
+
+    const displayName = session?.user?.name || session?.user?.email || DEFAULT_USER.name;
+    const email = session?.user?.email || DEFAULT_USER.email;
+
+    setUser(prev => ({
+      ...prev,
+      name: displayName,
+      email,
+      avatar: (displayName || 'U').substring(0, 1).toUpperCase(),
+      contexts,
+      activeContext: preferred,
+    }));
+
+    setIsLoading(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const inferred = inferContextFromPath(pathname);
+    if (!inferred) return;
+
+    // Keep the last visited page per workspace to make switching feel "smart".
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(lastPathKey(inferred), pathname);
+    }
+
+    setUser(current => {
+      if (current.activeContext === inferred) return current;
+      if (!current.contexts.includes(inferred)) return current;
+      return { ...current, activeContext: inferred };
+    });
+  }, [pathname]);
+
+  const setActiveContext = useCallback(
+    (ctx: ServiceContext) => {
+      setUser(current => {
+        if (current.activeContext === ctx) return current;
+        if (!current.contexts.includes(ctx)) return current;
+        return { ...current, activeContext: ctx };
+      });
+
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(STORAGE_ACTIVE_CONTEXT, ctx);
+        const last = window.localStorage.getItem(lastPathKey(ctx));
+        const target = last || CONTEXT_HOME[ctx];
+        if (target && target !== pathname) {
+          router.push(target);
+        }
+      } else {
+        router.push(CONTEXT_HOME[ctx]);
+      }
+    },
+    [pathname, router],
+  );
 
   const activeMeta = useMemo(() => CONTEXT_META[user.activeContext], [user.activeContext]);
   const navItems = NAV_ITEMS[user.activeContext];
@@ -106,7 +202,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             onContextChange={setActiveContext}
           />
           <div className="page-content">
-            <NavBar user={user} activeMeta={activeMeta} />
+            <NavBar
+              user={user}
+              contexts={user.contexts}
+              activeContext={user.activeContext}
+              onContextChange={setActiveContext}
+              isLoading={isLoading}
+            />
             <main className="page-main animate-in">{children}</main>
             <Footer activeMeta={activeMeta} />
           </div>

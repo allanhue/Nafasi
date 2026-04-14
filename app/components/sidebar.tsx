@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { clearSession } from '../lib/session';
 
-type ServiceContext = 'rental' | 'inventory' | 'spaces';
+type ServiceContext = 'rental' | 'inventory' | 'spaces' | 'admin';
 
 type UserProfile = {
   name: string;
@@ -42,9 +42,13 @@ type NavItem = {
 export default function Sidebar({
   user,
   navItems,
+  contextMeta,
+  onContextChange,
 }: {
   user: UserProfile;
   navItems: NavItem[];
+  contextMeta?: Record<ServiceContext, { label: string; color: string; dot: string }>;
+  onContextChange?: (ctx: ServiceContext) => void;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -68,7 +72,14 @@ export default function Sidebar({
     'Calendar': Calendar,
     'Earnings': Banknote,
     'Reports': BarChart3,
+    'Tickets': Target,
   };
+
+  const avatarIsImage =
+    typeof user.avatar === 'string' &&
+    (user.avatar.startsWith('http') || user.avatar.startsWith('data:') || user.avatar.startsWith('/'));
+
+  const activeMeta = contextMeta ? contextMeta[user.activeContext] : null;
 
   return (
     <aside className="sidebar">
@@ -78,6 +89,16 @@ export default function Sidebar({
           <span className="brand-mark">N</span>
           <span className="brand-name">nafasi</span>
         </Link>
+        {activeMeta ? (
+          <div
+            className={`context-tag context-${user.activeContext}`}
+            aria-label={`Active workspace: ${activeMeta.label}`}
+            title={`Active workspace: ${activeMeta.label}`}
+          >
+            <span className="workspace-dot" style={{ background: activeMeta.color }} />
+            <span>{activeMeta.label}</span>
+          </div>
+        ) : null}
       </div>
 
       <nav className="sidebar-nav">
@@ -120,7 +141,7 @@ export default function Sidebar({
       <div className="sidebar-footer">
         <div className="user-profile-mini">
           <div className="avatar">
-            {user.avatar ? <img src={user.avatar} alt={user.name} /> : <User size={20} />}
+            {avatarIsImage ? <img src={user.avatar} alt={user.name} /> : (user.avatar || 'U')}
           </div>
           <div className="user-meta">
             <p className="user-name">{user.name}</p>
