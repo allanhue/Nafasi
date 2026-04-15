@@ -33,7 +33,7 @@ const typeBadge = (type: string) => {
   }
 };
 
-export default function NotificationsComponent() {
+export default function NotificationsComponent({ compact = false }: { compact?: boolean } = {}) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -84,12 +84,20 @@ export default function NotificationsComponent() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16 }}>Notifications</h2>
-        <button className="btn btn-ghost btn-sm" type="button" onClick={fetchNotifications} disabled={loading}>
-          {loading ? 'Refreshing…' : 'Refresh'}
-        </button>
-      </div>
+      {!compact ? (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16 }}>Notifications</h2>
+          <button className="btn btn-ghost btn-sm" type="button" onClick={fetchNotifications} disabled={loading}>
+            {loading ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+          <button className="btn btn-ghost btn-sm" type="button" onClick={fetchNotifications} disabled={loading}>
+            {loading ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
+      )}
 
       {error ? <div className="alert alert-error">{error}</div> : null}
 

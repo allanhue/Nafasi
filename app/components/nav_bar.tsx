@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Bell, ChevronDown } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import NotificationDrawer from './notification_drawer';
 
 type ServiceContext = 'rental' | 'inventory' | 'spaces' | 'admin';
 
@@ -51,6 +52,7 @@ export default function NavBar({
 
   const meta = CONTEXT_META[safeContext] || CONTEXT_META.rental;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   const cycleContext = useCallback(
@@ -65,7 +67,10 @@ export default function NavBar({
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMenuOpen(false);
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+        setNotificationsOpen(false);
+      }
 
       // Alt+M cycles workspaces; hold Shift to reverse.
       if (event.altKey && event.key.toLowerCase() === 'm') {
@@ -78,6 +83,11 @@ export default function NavBar({
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [cycleContext]);
+
+  useEffect(() => {
+    setMenuOpen(false);
+    setNotificationsOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -99,75 +109,87 @@ export default function NavBar({
   }, [isLoading, user.name]);
 
   return (
-    <header className="topbar">
-      <div className="topbar-left">
-        <span className="topbar-title">{pageTitle}</span>
-      </div>
+    <>
+      <header className="topbar">
+        <div className="topbar-left">
+          <span className="topbar-title">{pageTitle}</span>
+        </div>
 
-      <div className="topbar-actions">
-        <div className="workspace-switch" ref={menuRef}>
+        <div className="topbar-actions">
+          <div className="workspace-switch" ref={menuRef}>
+            <button
+              type="button"
+              className="workspace-button"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen(open => !open)}
+              title="Switch workspace (Alt+M)"
+            >
+              <span className={`context-tag context-${safeContext}`}>
+                <span className="workspace-dot" style={{ background: meta.color }} />
+                <span className="workspace-title">{meta.label}</span>
+              </span>
+              <ChevronDown size={14} />
+            </button>
+
+            {menuOpen ? (
+              <div className="workspace-menu" role="menu" aria-label="Workspace menu">
+                {contexts.map((ctx) => {
+                  const itemMeta = CONTEXT_META[ctx] || CONTEXT_META.rental;
+                  const active = ctx === safeContext;
+
+                  return (
+                    <button
+                      key={ctx}
+                      type="button"
+                      role="menuitem"
+                      className={`workspace-item${active ? ' active' : ''}`}
+                      onClick={() => {
+                        onContextChange(ctx);
+                        setMenuOpen(false);
+                      }}
+                    >
+                      <span className="workspace-item-left">
+                        <span className="workspace-dot" style={{ background: itemMeta.color }} />
+                        <span>{itemMeta.label}</span>
+                      </span>
+                      <span className="workspace-hint">{itemMeta.hint}</span>
+                    </button>
+                  );
+                })}
+                {contexts.length > 1 ? (
+                  <div className="workspace-footer" aria-hidden="true">
+                    Tip: press Alt+M to switch (Shift reverses)
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="topbar-search">
+            <input className="input" placeholder="Search" aria-label="Search" />
+          </div>
+
           <button
             type="button"
-            className="workspace-button"
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen(open => !open)}
-            title="Switch workspace (Alt+M)"
+            className="icon-button"
+            aria-label="Notifications"
+            aria-controls="notifications-drawer"
+            aria-expanded={notificationsOpen}
+            onClick={() => setNotificationsOpen(open => !open)}
+            title="Notifications"
           >
-            <span className={`context-tag context-${safeContext}`}>
-              <span className="workspace-dot" style={{ background: meta.color }} />
-              <span className="workspace-title">{meta.label}</span>
-            </span>
-            <ChevronDown size={14} />
+            <Bell size={18} />
+            <span className="dot" />
           </button>
 
-          {menuOpen ? (
-            <div className="workspace-menu" role="menu" aria-label="Workspace menu">
-              {contexts.map((ctx) => {
-                const itemMeta = CONTEXT_META[ctx] || CONTEXT_META.rental;
-                const active = ctx === safeContext;
-
-                return (
-                  <button
-                    key={ctx}
-                    type="button"
-                    role="menuitem"
-                    className={`workspace-item${active ? ' active' : ''}`}
-                    onClick={() => {
-                      onContextChange(ctx);
-                      setMenuOpen(false);
-                    }}
-                  >
-                    <span className="workspace-item-left">
-                      <span className="workspace-dot" style={{ background: itemMeta.color }} />
-                      <span>{itemMeta.label}</span>
-                    </span>
-                    <span className="workspace-hint">{itemMeta.hint}</span>
-                  </button>
-                );
-              })}
-              {contexts.length > 1 ? (
-                <div className="workspace-footer" aria-hidden="true">
-                  Tip: press Alt+M to switch (Shift reverses)
-                </div>
-              ) : null}
-            </div>
-          ) : null}
+          <Link href="/profile" className="avatar-link" aria-label={`Open profile for ${titleRight}`}>
+            <div className="avatar">{user.avatar}</div>
+          </Link>
         </div>
+      </header>
 
-        <div className="topbar-search">
-          <input className="input" placeholder="Search" aria-label="Search" />
-        </div>
-
-        <button className="icon-button" aria-label="Notifications">
-          <Bell size={18} />
-          <span className="dot" />
-        </button>
-
-        <Link href="/profile" className="avatar-link" aria-label={`Open profile for ${titleRight}`}>
-          <div className="avatar">{user.avatar}</div>
-        </Link>
-      </div>
-    </header>
+      <NotificationDrawer open={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
+    </>
   );
 }
