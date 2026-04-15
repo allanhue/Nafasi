@@ -40,7 +40,7 @@ export default function NotificationDrawer({
       />
 
       <aside
-        className="nafasi-drawer nafasi-drawer-left"
+        className="nafasi-drawer nafasi-drawer-right"
         id="notifications-drawer"
         role="dialog"
         aria-modal="true"

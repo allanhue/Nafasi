@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, 
   Home, 
@@ -19,9 +19,10 @@ import {
   Bell, 
   Settings, 
   User, 
-  LogOut
+  LogOut,
+  Building
 } from 'lucide-react';
-import { clearSession, readSession } from '../lib/session';
+import { useLogout } from '../lib/useLogout';
 
 type ServiceContext = 'rental' | 'inventory' | 'spaces' | 'admin';
 
@@ -51,30 +52,12 @@ export default function Sidebar({
   onContextChange?: (ctx: ServiceContext) => void;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
+  const logout = useLogout();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_BACKEND_URL ||
-    'http://localhost:8080';
-
   const handleLogout = async () => {
-    const session = readSession();
-
-    try {
-      if (session?.token) {
-        await fetch(`${API_BASE_URL}/auth/logout`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${session.token}` },
-        });
-      }
-    } catch {
-      // Best-effort logout; still clear local session.
-    } finally {
-      clearSession();
-      router.push('/auth/login');
-    }
+    setShowLogoutConfirm(false);
+    await logout();
   };
 
   const iconMap: Record<string, any> = {

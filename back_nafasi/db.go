@@ -48,7 +48,6 @@ func connectDatabase() (*sql.DB, error) {
 		return nil, err
 	}
 
-
 	return db, nil
 }
 
@@ -194,6 +193,27 @@ func InitSchema(db *sql.DB) error {
 			read BOOLEAN DEFAULT FALSE,
 			created_at TIMESTAMPTZ DEFAULT NOW()
 		)`,
+		// Subscription/Plans tables
+		`CREATE TABLE IF NOT EXISTS plans (
+			id SERIAL PRIMARY KEY,
+			name TEXT NOT NULL UNIQUE,
+			description TEXT,
+			price DECIMAL(10,2) DEFAULT 0,
+			billing_period TEXT DEFAULT 'monthly',
+			features JSONB,
+			is_active BOOLEAN DEFAULT TRUE,
+			created_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
+		`CREATE TABLE IF NOT EXISTS user_subscriptions (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			plan_id INT NOT NULL REFERENCES plans(id),
+			status TEXT DEFAULT 'active',
+			started_at TIMESTAMPTZ DEFAULT NOW(),
+			expires_at TIMESTAMPTZ,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)`,
 	}
 
 	for _, stmt := range statements {
@@ -217,6 +237,10 @@ func InitSchema(db *sql.DB) error {
 	}
 
 	if err := seedDefaultRoles(db); err != nil {
+		return err
+	}
+
+	if err := seedDefaultPlans(db); err != nil {
 		return err
 	}
 
@@ -248,6 +272,45 @@ func seedDefaultRoles(db *sql.DB) error {
 		ON CONFLICT DO NOTHING
 	`, defaultOwnerRole)
 	return err
+}
+
+func seedDefaultPlans(db *sql.DB) error {
+	plans := []map[string]interface{}{
+		{
+			"name":           "Free",
+			"description":    "Get started for free",
+			"price":          0,
+			"billing_period": "monthly",
+			"features":       `{"properties": 1, "api_calls": 1000, "support": "community"}`,
+		},
+		{
+			"name":           "Pro",
+			"description":    "Perfect for growing businesses",
+			"price":          29.99,
+			"billing_period": "monthly",
+			"features":       `{"properties": 10, "api_calls": 50000, "support": "email"}`,
+		},
+		{
+			"name":           "Enterprise",
+			"description":    "For large scale operations",
+			"price":          99.99,
+			"billing_period": "monthly",
+			"features":       `{"properties": 999, "api_calls": 1000000, "support": "24/7"}`,
+		},
+	}
+
+	for _, plan := range plans {
+		_, err := db.Exec(`
+			INSERT INTO plans (name, description, price, billing_period, features, is_active)
+			VALUES ($1, $2, $3, $4, $5, true)
+			ON CONFLICT (name) DO NOTHING
+		`, plan["name"], plan["description"], plan["price"], plan["billing_period"], plan["features"])
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func seedOwner(db *sql.DB) error {

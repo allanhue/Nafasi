@@ -1,8 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { writeSession } from '../../lib/session';
+import { apiPost, apiGet } from '../../lib/api';
+
+type Plan = {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  billing_period: string;
+};
 
 type RegisterResponse = {
   token: string;
@@ -14,20 +23,33 @@ type RegisterResponse = {
   };
 };
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  'http://localhost:8080';
-
 export default function RegisterPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', plan_id: 1 });
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(false);
+  const [plansLoading, setPlansLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Load available plans
+  useEffect(() => {
+    const loadPlans = async () => {
+      try {
+        const data = await apiGet<Plan[]>('/auth/plans', { includeToken: false });
+        setPlans(data);
+      } catch (err) {
+        console.error('Failed to load plans:', err);
+      } finally {
+        setPlansLoading(false);
+      }
+    };
+    loadPlans();
+  }, []);
+
   const updateField =
-    (key: 'name' | 'email' | 'password') => (event: React.ChangeEvent<HTMLInputElement>) => {
-      setForm(current => ({ ...current, [key]: event.target.value }));
+    (key: 'name' | 'email' | 'password' | 'plan_id') => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      const value = key === 'plan_id' ? parseInt(event.target.value, 10) : event.target.value;
+      setForm(current => ({ ...current, [key]: value }));
     };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -36,24 +58,20 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+      const payload = apiPost<RegisterResponse>('/auth/register', {
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        plan_id: form.plan_id,
       });
-
-      if (!response.ok) {
-        const payload = await response.json().catch(() => null);
-        throw new Error(payload?.error || 'Registration failed');
-      }
-
-      const payload = (await response.json()) as RegisterResponse;
-      const roles = payload.user.roles || [];
+      
+      const response = await payload;
+      const roles = response.user.roles || [];
       const role = roles.includes('superadmin') ? 'system_admin' : roles[0] || 'user';
 
       writeSession({
-        token: payload.token,
-        user: payload.user,
+        token: response.token,
+        user: response.user,
         role,
       });
 
@@ -106,8 +124,27 @@ export default function RegisterPage() {
               required
             />
           </div>
+          <div>
+            <label style={{ fontSize: 12,fontWeight: 600, color: 'var(--text-secondary)' }}>Select Plan</label>
+            <select
+              className="input"
+              value={form.plan_id}
+              onChange={updateField('plan_id')}
+              disabled={plansLoading}
+            >
+              {plansLoading ? (
+                <option>Loading plans...</option>
+              ) : (
+                plans.map(plan => (
+                  <option key={plan.id} value={plan.id}>
+                    {plan.name} - ${plan.price}/month
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
           {error ? <p style={{ color: 'var(--status-danger)', fontSize: 12 }}>{error}</p> : null}
-          <button className="btn btn-primary btn-lg" type="submit" disabled={loading}>
+          <button className="btn btn-primary btn-lg" type="submit" disabled={loading || plansLoading}>
             {loading ? 'Creating account...' : 'Create account'}
           </button>
         </div>

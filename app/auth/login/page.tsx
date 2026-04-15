@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { writeSession } from '../../lib/session';
+import { apiPost } from '../../lib/api';
 
 type LoginResponse = {
   token: string;
@@ -13,11 +14,6 @@ type LoginResponse = {
     roles?: string[];
   };
 };
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  'http://localhost:8080';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,24 +31,13 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-
-      if (!response.ok) {
-        const payload = await response.json().catch(() => null);
-        throw new Error(payload?.error || 'Login failed');
-      }
-
-      const payload = (await response.json()) as LoginResponse;
-      const roles = payload.user.roles || [];
+      const response = await apiPost<LoginResponse>('/auth/login', form, { includeToken: false });
+      const roles = response.user.roles || [];
       const role = roles.includes('superadmin') ? 'system_admin' : roles[0] || 'user';
 
       writeSession({
-        token: payload.token,
-        user: payload.user,
+        token: response.token,
+        user: response.user,
         role,
       });
 

@@ -17,6 +17,8 @@ func Register(mux *http.ServeMux, db *sql.DB) {
 	mux.HandleFunc("POST /auth/login", auth.HandleLogin)
 	mux.HandleFunc("GET /auth/me", auth.HandleMe)
 	mux.HandleFunc("POST /auth/logout", auth.HandleLogout)
+	mux.HandleFunc("GET /auth/plans", auth.HandleGetPlans)
+	mux.HandleFunc("GET /auth/subscription", auth.HandleGetSubscription)
 
 	// Rental routes
 	rental := NewRentalService(db)

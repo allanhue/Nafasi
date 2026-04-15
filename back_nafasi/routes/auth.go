@@ -28,11 +28,21 @@ type RegisterRequest struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	PlanID   int    `json:"plan_id"`
 }
 
 type LoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type PlanResponse struct {
+	ID            int                    `json:"id"`
+	Name          string                 `json:"name"`
+	Description   string                 `json:"description"`
+	Price         float64                `json:"price"`
+	BillingPeriod string                 `json:"billing_period"`
+	Features      map[string]interface{} `json:"features"`
 }
 
 type UserResponse struct {
@@ -100,6 +110,21 @@ func (s *AuthService) HandleRegister(w http.ResponseWriter, r *http.Request) {
 		ON CONFLICT DO NOTHING
 	`, userID, roleID); err != nil {
 		respondError(w, http.StatusInternalServerError, "could not assign role")
+		return
+	}
+
+	// Assign default plan (Free) if no plan specified
+	planID := req.PlanID
+	if planID == 0 {
+		planID = 1 // Default to Free plan
+	}
+
+	// Create subscription
+	if _, err := s.db.ExecContext(ctx, `
+		INSERT INTO user_subscriptions (user_id, plan_id, status, expires_at)
+		VALUES ($1, $2, 'active', NOW() + INTERVAL '30 day')
+	`, userID, planID); err != nil {
+		respondError(w, http.StatusInternalServerError, "could not create subscription")
 		return
 	}
 
@@ -290,7 +315,100 @@ func (s *AuthService) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, _ = s.db.ExecContext(ctx, `
+		DELETE FROM sessions WHERE token_hash = $1
+	`, hashToken(token))
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "logout failed")
+		return
+	}
+
 	respondJSON(w, http.StatusOK, map[string]string{"message": "logged out successfully"})
+}
+
+func (s *AuthService) HandleGetPlans(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT id, name, description, price, billing_period, features
+		FROM plans
+		WHERE is_active = true
+		ORDER BY price ASC
+	`)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "could not fetch plans")
+		return
+	}
+	defer rows.Close()
+
+	var plans []PlanResponse
+	for rows.Next() {
+		var plan PlanResponse
+		var features string
+
+		if err := rows.Scan(&plan.ID, &plan.Name, &plan.Description, &plan.Price, &plan.BillingPeriod, &features); err != nil {
+			respondError(w, http.StatusInternalServerError, "could not parse plans")
+			return
+		}
+
+		// Parse JSON features
+		if features != "" {
+			if err := json.Unmarshal([]byte(features), &plan.Features); err != nil {
+				plan.Features = make(map[string]interface{})
+			}
+		} else {
+			plan.Features = make(map[string]interface{})
+		}
+
+		plans = append(plans, plan)
+	}
+
+	if plans == nil {
+		plans = []PlanResponse{}
+	}
+
+	respondJSON(w, http.StatusOK, plans)
+}
+
+func (s *AuthService) HandleGetSubscription(w http.ResponseWriter, r *http.Request) {
+	token, err := bearerToken(r)
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "missing token")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	userID, _, _, err := s.userFromToken(ctx, token)
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid session")
+		return
+	}
+
+	var subscriptionData struct {
+		PlanID    int    `json:"plan_id"`
+		PlanName  string `json:"plan_name"`
+		Status    string `json:"status"`
+		StartedAt string `json:"started_at"`
+		ExpiresAt string `json:"expires_at"`
+	}
+
+	err = s.db.QueryRowContext(ctx, `
+		SELECT p.id, p.name, us.status, us.started_at, us.expires_at
+		FROM user_subscriptions us
+		INNER JOIN plans p ON p.id = us.plan_id
+		WHERE us.user_id = $1
+		ORDER BY us.created_at DESC
+		LIMIT 1
+	`, userID).Scan(&subscriptionData.PlanID, &subscriptionData.PlanName, &subscriptionData.Status, &subscriptionData.StartedAt, &subscriptionData.ExpiresAt)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "no active subscription found")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, subscriptionData)
 }
 
 func bearerToken(r *http.Request) (string, error) {
