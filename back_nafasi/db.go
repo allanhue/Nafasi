@@ -244,6 +244,10 @@ func InitSchema(db *sql.DB) error {
 		return err
 	}
 
+	if err := seedOwner(db); err != nil {
+		return err
+	}
+
 	return nil
 }
 

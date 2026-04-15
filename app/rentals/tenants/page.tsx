@@ -14,7 +14,7 @@ type Tenant = {
   created_at: string;
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
 
 export default function TenantsPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);

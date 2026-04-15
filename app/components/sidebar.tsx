@@ -3,109 +3,56 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  Home, 
-  Users, 
-  CircleDollarSign, 
-  Wrench, 
-  Package, 
-  ClipboardList, 
-  RefreshCw, 
-  Target, 
-  Calendar, 
-  Banknote, 
-  BarChart3, 
-  Bell, 
-  Settings, 
-  User, 
-  LogOut,
-  Building
-} from 'lucide-react';
+import { readSession } from '../lib/session';
 import { useLogout } from '../lib/useLogout';
-
-type ServiceContext = 'rental' | 'inventory' | 'spaces' | 'admin';
+import { useRoleBasedNavigation } from '../lib/useRoleBasedNavigation';
+import {
+  User,
+  LogOut,
+  Building,
+  Bell,
+  BarChart3,
+  Settings,
+  AlertCircle,
+} from 'lucide-react';
 
 type UserProfile = {
   name: string;
   email: string;
   avatar: string;
-  contexts: ServiceContext[];
-  activeContext: ServiceContext;
-};
-
-type NavItem = {
-  label: string;
-  short: string;
-  href: string;
 };
 
 export default function Sidebar({
   user,
-  navItems,
-  contextMeta,
-  onContextChange,
 }: {
   user: UserProfile;
-  navItems: NavItem[];
-  contextMeta?: Record<ServiceContext, { label: string; color: string; dot: string }>;
-  onContextChange?: (ctx: ServiceContext) => void;
 }) {
   const pathname = usePathname();
   const logout = useLogout();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const { navItems, canAccessOrganizations } = useRoleBasedNavigation();
 
   const handleLogout = async () => {
     setShowLogoutConfirm(false);
     await logout();
   };
 
-  const iconMap: Record<string, any> = {
-    'Dashboard': LayoutDashboard,
-    'Properties': Home,
-    'Tenants': Users,
-    'Payments': CircleDollarSign,
-    'Maintenance': Wrench,
-    'Warehouses': Package,
-    'Inventory': ClipboardList,
-    'Products': ClipboardList,
-    'Movements': RefreshCw,
-    'Bookings': Target,
-    'Calendar': Calendar,
-    'Earnings': Banknote,
-    'Reports': BarChart3,
-    'Tickets': Target,
-  };
-
   const avatarIsImage =
     typeof user.avatar === 'string' &&
     (user.avatar.startsWith('http') || user.avatar.startsWith('data:') || user.avatar.startsWith('/'));
 
-  const activeMeta = contextMeta ? contextMeta[user.activeContext] : null;
-
   return (
     <aside className="sidebar">
-      {/* Fixed: Added missing closing div for sidebar-header */}
       <div className="sidebar-header">
         <Link href="/" className="brand">
           <span className="brand-mark">N</span>
           <span className="brand-name">nafasi</span>
         </Link>
-        {activeMeta ? (
-          <div
-            className={`context-tag context-${user.activeContext}`}
-            aria-label={`Active workspace: ${activeMeta.label}`}
-            title={`Active workspace: ${activeMeta.label}`}
-          >
-            <span className="workspace-dot" style={{ background: activeMeta.color }} />
-            <span>{activeMeta.label}</span>
-          </div>
-        ) : null}
       </div>
 
       <nav className="sidebar-nav">
         {navItems.map((item) => {
-          const Icon = iconMap[item.label] || Target;
+          const Icon = item.icon;
           const active =
             pathname === item.href ||
             (item.href !== '/dashboard' && pathname.startsWith(item.href));
@@ -123,6 +70,13 @@ export default function Sidebar({
         })}
 
         <div className="sidebar-divider" />
+
+        {canAccessOrganizations && (
+          <Link href="/organizations" className={`nav-link${pathname === '/organizations' || pathname.startsWith('/organizations/') ? ' active' : ''}`}>
+            <Building size={20} className="nav-icon" />
+            <span>Organizations</span>
+          </Link>
+        )}
 
         <Link href="/notifications" className={`nav-link${pathname === '/notifications' ? ' active' : ''}`}>
           <Bell size={20} className="nav-icon" />

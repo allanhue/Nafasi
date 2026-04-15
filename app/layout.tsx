@@ -79,10 +79,7 @@ const DEFAULT_USER: UserProfile = {
   activeContext: 'rental',
 };
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
 
 const STORAGE_ACTIVE_CONTEXT = 'nafasi_active_context';
 const lastPathKey = (ctx: ServiceContext) => `nafasi_last_path_${ctx}`;
@@ -250,9 +247,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <div className="app-shell">
           <Sidebar
             user={user}
-            navItems={navItems}
-            contextMeta={CONTEXT_META}
-            onContextChange={setActiveContext}
           />
           <div className="page-content">
             <NavBar
