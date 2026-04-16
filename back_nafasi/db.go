@@ -334,6 +334,11 @@ func seedOwner(db *sql.DB) error {
 		return nil
 	}
 
+	// Ensure the role exists
+	if _, err := db.Exec(`INSERT INTO roles (name, description) VALUES ($1, $2) ON CONFLICT DO NOTHING`, ownerRole, "Owner/Administrator role"); err != nil {
+		return err
+	}
+
 	hash, err := bcrypt.GenerateFromPassword([]byte(ownerPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return err

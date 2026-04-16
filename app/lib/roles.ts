@@ -1,12 +1,40 @@
+'use client';
+
+import { useMemo } from 'react';
+import { readSession } from './session';
+import {
+  LayoutDashboard,
+  Home,
+  Users,
+  CircleDollarSign,
+  Wrench,
+  Package,
+  ClipboardList,
+  RefreshCw,
+  Target,
+  Calendar,
+  Banknote,
+  BarChart3,
+  Bell,
+  Settings,
+  Building,
+  Ticket,
+  UserPlus,
+  LucideIcon,
+} from 'lucide-react';
+
+/* ============================================================
+   ROLE DEFINITIONS
+   ============================================================ */
+
 export const ROLES = {
   SYSTEM_ADMIN: 'system_admin',
   WAREHOUSE_MANAGER: 'warehouse_manager',
   LANDLORD: 'landlord',
-  TENANT: 'tenant', // Invited by landlord to rent a house
+  TENANT: 'tenant',
   SPACE_MANAGER: 'space_manager',
-  USER: 'user', // Self-registered, books spaces or buys tickets
-  HOUSE_SEEKER: 'house_seeker', // Looking for a house to rent (registered by landlord)
-  User: 'user',
+  USER: 'user',
+  HOUSE_SEEKER: 'house_seeker',
 } as const;
 
 export type UserRole = typeof ROLES[keyof typeof ROLES];
@@ -19,6 +47,7 @@ export interface RolePermissions {
   canViewTickets: boolean;
   canManageUsers: boolean;
   canInviteTenants: boolean;
+  canAccessAdmin: boolean;
 }
 
 export const rolePermissions: Record<UserRole, RolePermissions> = {
@@ -30,6 +59,7 @@ export const rolePermissions: Record<UserRole, RolePermissions> = {
     canViewTickets: true,
     canManageUsers: true,
     canInviteTenants: true,
+    canAccessAdmin: true,
   },
   [ROLES.WAREHOUSE_MANAGER]: {
     canAccessOrganizations: false,
@@ -39,6 +69,7 @@ export const rolePermissions: Record<UserRole, RolePermissions> = {
     canViewTickets: false,
     canManageUsers: false,
     canInviteTenants: false,
+    canAccessAdmin: false,
   },
   [ROLES.LANDLORD]: {
     canAccessOrganizations: false,
@@ -47,7 +78,8 @@ export const rolePermissions: Record<UserRole, RolePermissions> = {
     canManageSpaces: false,
     canViewTickets: true,
     canManageUsers: false,
-    canInviteTenants: true, // Can invite people to become tenants
+    canInviteTenants: true,
+    canAccessAdmin: false,
   },
   [ROLES.TENANT]: {
     canAccessOrganizations: false,
@@ -57,6 +89,7 @@ export const rolePermissions: Record<UserRole, RolePermissions> = {
     canViewTickets: true,
     canManageUsers: false,
     canInviteTenants: false,
+    canAccessAdmin: false,
   },
   [ROLES.SPACE_MANAGER]: {
     canAccessOrganizations: false,
@@ -66,6 +99,7 @@ export const rolePermissions: Record<UserRole, RolePermissions> = {
     canViewTickets: true,
     canManageUsers: false,
     canInviteTenants: false,
+    canAccessAdmin: false,
   },
   [ROLES.USER]: {
     canAccessOrganizations: false,
@@ -75,6 +109,7 @@ export const rolePermissions: Record<UserRole, RolePermissions> = {
     canViewTickets: true,
     canManageUsers: false,
     canInviteTenants: false,
+    canAccessAdmin: false,
   },
   [ROLES.HOUSE_SEEKER]: {
     canAccessOrganizations: false,
@@ -84,53 +119,165 @@ export const rolePermissions: Record<UserRole, RolePermissions> = {
     canViewTickets: false,
     canManageUsers: false,
     canInviteTenants: false,
-  },
-  user: {
-    canAccessOrganizations: false,
-    canManageInventory: false,
-    canManageRentals: false,
-    canManageSpaces: false,
-    canViewTickets: true,
-    canManageUsers: false,
-    canInviteTenants: false,
+    canAccessAdmin: false,
   },
 };
+
+/* ============================================================
+   PERMISSION HELPERS
+   ============================================================ */
 
 export function getUserPermissions(role: UserRole): RolePermissions {
   return rolePermissions[role] || rolePermissions[ROLES.USER];
 }
 
 export function canAccess(role: UserRole, permission: keyof RolePermissions): boolean {
-  const permissions = getUserPermissions(role);
-  return permissions[permission];
+  const perms = rolePermissions[role] || rolePermissions[ROLES.USER];
+  return perms[permission] === true;
 }
 
-export const roleLabels: Record<UserRole, string> = {
-  [ROLES.SYSTEM_ADMIN]: 'System Admin',
-  [ROLES.WAREHOUSE_MANAGER]: 'Warehouse Manager',
-  [ROLES.LANDLORD]: 'Landlord',
-  [ROLES.TENANT]: 'Tenant',
-  [ROLES.SPACE_MANAGER]: 'Space Manager',
-  [ROLES.USER]: 'User',
-  [ROLES.HOUSE_SEEKER]: 'House Seeker',
-  user: 'User',
-};
+/* ============================================================
+   NAVIGATION TYPES & INTERFACES
+   ============================================================ */
 
-export function getRoleLabel(role: UserRole): string {
-  return roleLabels[role] || 'User';
+export interface NavItem {
+  label: string;
+  short: string;
+  href: string;
+  icon: LucideIcon;
+  requiredPermission: keyof RolePermissions | null;
 }
 
-export const roleDescriptions: Record<UserRole, string> = {
-  [ROLES.SYSTEM_ADMIN]: 'Full platform access, manages organizations and all features',
-  [ROLES.WAREHOUSE_MANAGER]: 'Manages inventory, warehouses, and product movements',
-  [ROLES.LANDLORD]: 'Manages rental properties and can invite tenants',
-  [ROLES.TENANT]: 'Rents properties from landlords',
-  [ROLES.SPACE_MANAGER]: 'Manages spaces available for booking',
-  [ROLES.USER]: 'Searches and books spaces, buys tickets',
-  [ROLES.HOUSE_SEEKER]: 'Looking for a house to rent via landlord invitation',
-  user: 'Basic user access',
-};
+/* ============================================================
+   NAVIGATION HOOK (Consolidated)
+   ============================================================ */
 
-export function getRoleDescription(role: UserRole): string {
-  return roleDescriptions[role] || 'User account';
-} 
+export function useRoleBasedNavigation() {
+  return useMemo(() => {
+    const session = readSession();
+    const userRole: UserRole = (session?.role as UserRole) || ROLES.USER;
+
+    const allNavItems: NavItem[] = [
+      {
+        label: 'Dashboard',
+        short: 'D',
+        href: '/dashboard',
+        icon: LayoutDashboard,
+        requiredPermission: null,
+      },
+      {
+        label: 'Properties',
+        short: 'P',
+        href: '/rentals/properties',
+        icon: Home,
+        requiredPermission: 'canManageRentals',
+      },
+      {
+        label: 'Tenants',
+        short: 'T',
+        href: '/rentals/tenants',
+        icon: Users,
+        requiredPermission: 'canManageRentals',
+      },
+      {
+        label: 'Invite Tenants',
+        short: 'IT',
+        href: '/rentals/tenants/invite',
+        icon: UserPlus,
+        requiredPermission: 'canInviteTenants',
+      },
+      {
+        label: 'Payments',
+        short: 'PM',
+        href: '/rentals/payments',
+        icon: CircleDollarSign,
+        requiredPermission: 'canManageRentals',
+      },
+      {
+        label: 'Maintenance',
+        short: 'M',
+        href: '/rentals/maintenance',
+        icon: Wrench,
+        requiredPermission: 'canManageRentals',
+      },
+      {
+        label: 'Warehouses',
+        short: 'W',
+        href: '/inventory/warehouses',
+        icon: Package,
+        requiredPermission: 'canManageInventory',
+      },
+      {
+        label: 'Products',
+        short: 'Pr',
+        href: '/inventory/products',
+        icon: ClipboardList,
+        requiredPermission: 'canManageInventory',
+      },
+      {
+        label: 'Movements',
+        short: 'Mv',
+        href: '/inventory/movements',
+        icon: RefreshCw,
+        requiredPermission: 'canManageInventory',
+      },
+      {
+        label: 'Reports',
+        short: 'R',
+        href: '/inventory/reports',
+        icon: BarChart3,
+        requiredPermission: 'canManageInventory',
+      },
+      {
+        label: 'Spaces',
+        short: 'SP',
+        href: '/bookings',
+        icon: Target,
+        requiredPermission: 'canManageSpaces',
+      },
+      {
+        label: 'Bookings',
+        short: 'B',
+        href: '/bookings/manage',
+        icon: Calendar,
+        requiredPermission: 'canManageSpaces',
+      },
+      {
+        label: 'Earnings',
+        short: 'E',
+        href: '/bookings/earnings',
+        icon: Banknote,
+        requiredPermission: 'canManageSpaces',
+      },
+      {
+        label: 'Tickets',
+        short: 'TK',
+        href: '/administrator/tickets',
+        icon: Ticket,
+        requiredPermission: 'canViewTickets',
+      },
+      {
+        label: 'Admin Panel',
+        short: 'A',
+        href: '/administrator/dashboard',
+        icon: Building,
+        requiredPermission: 'canAccessAdmin',
+      },
+    ];
+
+    // Filter items based on user permissions
+    const navItems = allNavItems.filter(item => {
+      if (item.requiredPermission === null) return true;
+      return canAccess(userRole, item.requiredPermission);
+    });
+
+    const permissions = getUserPermissions(userRole);
+
+    return {
+      navItems,
+      permissions,
+      userRole,
+      canAccessOrganizations: permissions.canAccessOrganizations,
+    };
+  }, []);
+}

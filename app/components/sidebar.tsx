@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { readSession } from '../lib/session';
 import { useLogout } from '../lib/useLogout';
 import { useRoleBasedNavigation } from '../lib/useRoleBasedNavigation';
+import LogoutModal from './logout-modal';
 import {
   User,
   LogOut,
@@ -28,12 +28,11 @@ export default function Sidebar({
   user: UserProfile;
 }) {
   const pathname = usePathname();
-  const logout = useLogout();
+  const { logout, isLoading } = useLogout();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { navItems, canAccessOrganizations } = useRoleBasedNavigation();
 
-  const handleLogout = async () => {
-    setShowLogoutConfirm(false);
+  const handleLogoutConfirm = async () => {
     await logout();
   };
 
@@ -119,21 +118,24 @@ export default function Sidebar({
             className="icon-button logout-button"
             title="Logout"
             onClick={() => setShowLogoutConfirm(true)}
+            disabled={isLoading}
+            style={{
+              opacity: isLoading ? 0.6 : 1,
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+            }}
           >
             <LogOut size={18} />
           </button>
         </div>
 
-        {/* Fixed: Corrected the closing braces for this conditional block */}
-        {showLogoutConfirm && (
-          <div className="logout-confirm">
-            <p>Are you sure?</p>
-            <div className="confirm-buttons">
-              <button onClick={handleLogout} className="btn-primary">Logout</button>
-              <button onClick={() => setShowLogoutConfirm(false)} className="btn-secondary">Cancel</button>
-            </div>
-          </div>
-        )}
+        {/* Logout Confirmation Modal */}
+        <LogoutModal
+          isOpen={showLogoutConfirm}
+          isLoading={isLoading}
+          onConfirm={handleLogoutConfirm}
+          onCancel={() => setShowLogoutConfirm(false)}
+          userName={user.name}
+        />
       </div>
     </aside>
   );
