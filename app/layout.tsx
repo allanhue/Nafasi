@@ -85,7 +85,8 @@ const STORAGE_ACTIVE_CONTEXT = 'nafasi_active_context';
 const lastPathKey = (ctx: ServiceContext) => `nafasi_last_path_${ctx}`;
 const isPublicRoute = (pathname: string | null) => {
   if (!pathname) return true;
-  return pathname.startsWith('/auth/') || pathname === '/register';
+  // Auth pages are at /login and /register
+  return pathname.startsWith('/login') || pathname.startsWith('/register');
 };
 
 function inferContextFromPath(pathname: string | null): ServiceContext | null {
@@ -240,6 +241,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
   const activeMeta = useMemo(() => CONTEXT_META[user.activeContext], [user.activeContext]);
   const navItems = NAV_ITEMS[user.activeContext];
+  const isPublic = isPublicRoute(pathname);
+
+  // For public routes (auth pages), render minimal layout
+  if (isPublic) {
+    return (
+      <html lang="en">
+        <body suppressHydrationWarning>
+          {children}
+        </body>
+      </html>
+    );
+  }
 
   return (
     <html lang="en">

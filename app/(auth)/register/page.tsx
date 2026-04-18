@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { writeSession } from '../../lib/session';
-import { apiPost, apiGet } from '../../lib/api';
+import { writeSession } from '../../../lib/session';
+import { apiPost, apiGet } from '../../../lib/api';
 
 type Plan = {
   id: number;
@@ -87,7 +87,7 @@ export default function RegisterPage() {
     <div>
       <div className="page-header">
         <h1>Create your account</h1>
-        <p>Start managing payroll with Lanster.</p>
+        <p>Start managing your business with Nafasi.</p>
       </div>
 
       <form className="card" style={{ maxWidth: 420 }} onSubmit={handleSubmit}>
@@ -103,7 +103,7 @@ export default function RegisterPage() {
             />
           </div>
           <div>
-            <label style={{ fontSize: 12,fontWeight: 600, color: 'var(--text-secondary)' }}>Email</label>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Email</label>
             <input
               className="input"
               placeholder="you@company.com"
@@ -114,7 +114,7 @@ export default function RegisterPage() {
             />
           </div>
           <div>
-            <label style={{ fontSize: 12,fontWeight: 600, color: 'var(--text-secondary)' }}>Password</label>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Password</label>
             <input
               className="input"
               type="password"
@@ -125,7 +125,7 @@ export default function RegisterPage() {
             />
           </div>
           <div>
-            <label style={{ fontSize: 12,fontWeight: 600, color: 'var(--text-secondary)' }}>Select Plan</label>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Select Plan</label>
             <select
               className="input"
               value={form.plan_id}
@@ -147,6 +147,12 @@ export default function RegisterPage() {
           <button className="btn btn-primary btn-lg" type="submit" disabled={loading || plansLoading}>
             {loading ? 'Creating account...' : 'Create account'}
           </button>
+          <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-secondary)' }}>
+            Already have an account?{' '}
+            <a href="/auth/login" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 600 }}>
+              Sign in
+            </a>
+          </p>
         </div>
       </form>
     </div>

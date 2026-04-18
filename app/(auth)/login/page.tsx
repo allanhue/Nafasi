@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { writeSession, readSession } from '../../lib/session';
-import { apiPost } from '../../lib/api';
+import { writeSession, readSession } from '../../../lib/session';
+import { apiPost } from '../../../lib/api';
 import { AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 
 type LoginResponse = {
@@ -157,33 +157,20 @@ export default function LoginPage() {
 
           {/* Email Field */}
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
-              Email Address
-            </label>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Email</label>
             <input
               className="input"
               placeholder="you@company.com"
               value={form.email}
               onChange={updateField('email')}
               type="email"
-              autoComplete="email"
-              disabled={loading}
-              style={{
-                borderColor: validationErrors.email ? 'var(--status-danger)' : undefined,
-              }}
             />
-            {validationErrors.email && (
-              <p style={{ fontSize: 11, color: 'var(--status-danger)', marginTop: 4 }}>
-                {validationErrors.email}
-              </p>
-            )}
+            {validationErrors.email && <p style={{ color: 'var(--status-danger)', fontSize: 11, marginTop: 4 }}>{validationErrors.email}</p>}
           </div>
 
           {/* Password Field */}
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
-              Password
-            </label>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Password</label>
             <div style={{ position: 'relative' }}>
               <input
                 className="input"
@@ -191,12 +178,6 @@ export default function LoginPage() {
                 placeholder="Enter your password"
                 value={form.password}
                 onChange={updateField('password')}
-                autoComplete="current-password"
-                disabled={loading}
-                style={{
-                  borderColor: validationErrors.password ? 'var(--status-danger)' : undefined,
-                  paddingRight: 40,
-                }}
               />
               <button
                 type="button"
@@ -209,83 +190,42 @@ export default function LoginPage() {
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  color: 'var(--text-muted)',
+                  color: 'var(--text-secondary)',
                   padding: 4,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
                 }}
-                tabIndex={-1}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-            {validationErrors.password && (
-              <p style={{ fontSize: 11, color: 'var(--status-danger)', marginTop: 4 }}>
-                {validationErrors.password}
-              </p>
-            )}
+            {validationErrors.password && <p style={{ color: 'var(--status-danger)', fontSize: 11, marginTop: 4 }}>{validationErrors.password}</p>}
           </div>
 
           {/* Remember Email Checkbox */}
-          <label style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            cursor: 'pointer',
-            fontSize: 12,
-            color: 'var(--text-secondary)',
-          }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <input
               type="checkbox"
+              id="remember"
               checked={rememberEmail}
               onChange={(e) => setRememberEmail(e.target.checked)}
-              disabled={loading}
-              style={{ cursor: 'pointer' }}
+              style={{ width: 16, height: 16, cursor: 'pointer' }}
             />
-            Remember this email
-          </label>
+            <label htmlFor="remember" style={{ fontSize: 12, cursor: 'pointer' }}>Remember email</label>
+          </div>
 
           {/* Submit Button */}
-          <button
-            className="btn btn-primary btn-lg"
-            type="submit"
-            disabled={loading}
-            style={{
-              opacity: loading ? 0.6 : 1,
-              cursor: loading ? 'not-allowed' : 'pointer',
-              marginTop: 8,
-            }}
-          >
-            {loading ? (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-                <span style={{
-                  width: 14,
-                  height: 14,
-                  border: '2px solid rgba(255,255,255,0.3)',
-                  borderTop: '2px solid white',
-                  borderRadius: '50%',
-                  animation: 'spin 0.6s linear infinite',
-                }} />
-                Signing in...
-              </span>
-            ) : (
-              'Sign in'
-            )}
+          <button className="btn btn-primary btn-lg" type="submit" disabled={loading}>
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
 
-          {/* Help Text */}
-          <p style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', marginTop: 4 }}>
-            Don't have an account? <a href="/auth/register" style={{ color: 'var(--brand-accent)', textDecoration: 'none', fontWeight: 500 }}>Sign up</a>
+          {/* Sign Up Link */}
+          <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-secondary)' }}>
+            Don't have an account?{' '}
+            <a href="/auth/register" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 600 }}>
+              Create one
+            </a>
           </p>
         </div>
       </form>
-
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }

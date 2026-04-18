@@ -84,21 +84,7 @@ export default function LogoutModal({
             Are you sure you want to sign out, <strong>{userName}</strong>? You'll need to sign back in to access your workspace.
           </p>
 
-          {/* Unsaved Changes Warning */}
-          <div style={{
-            padding: 12,
-            borderRadius: 'var(--radius-md)',
-            background: 'rgba(249, 115, 22, 0.05)',
-            border: '1px solid rgba(249, 115, 22, 0.2)',
-            marginBottom: 20,
-            display: 'flex',
-            gap: 8,
-            fontSize: 11,
-            color: 'var(--text-secondary)',
-          }}>
-            <span style={{ flexShrink: 0, marginTop: 1 }}>⚠️</span>
-            <span>Any unsaved changes will be lost.</span>
-          </div>
+    
 
           {/* Actions */}
           <div style={{ display: 'flex', gap: 8 }}>
