@@ -474,6 +474,11 @@ h1, h2, h3, h4, h5, h6 {
   animation: nafasiDrawerInLeft 0.22s cubic-bezier(0.2, 0.9, 0.25, 1);
 }
 
+.nafasi-drawer-right {
+  right: 0;
+  animation: nafasiDrawerInRight 0.22s cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+
 .nafasi-drawer-header {
   height: var(--header-height);
   display: flex;
@@ -510,6 +515,11 @@ h1, h2, h3, h4, h5, h6 {
   to { transform: translateX(0); }
 }
 
+@keyframes nafasiDrawerInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
 @keyframes nafasiOverlayIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -517,7 +527,8 @@ h1, h2, h3, h4, h5, h6 {
 
 @media (prefers-reduced-motion: reduce) {
   .nafasi-drawer-overlay,
-  .nafasi-drawer-left {
+  .nafasi-drawer-left,
+  .nafasi-drawer-right {
     animation: none;
   }
 }

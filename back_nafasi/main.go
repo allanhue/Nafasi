@@ -24,7 +24,8 @@ func main() {
 	mux := http.NewServeMux()
 	routes.Register(mux, db.DB)
 
-	handler := withCORS(mux)
+	// Stack middleware: logging first, then CORS
+	handler := withLogging(withCORS(mux))
 
 	port := os.Getenv("PORT")
 	if strings.TrimSpace(port) == "" {

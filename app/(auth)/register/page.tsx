@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { writeSession } from '../../../lib/session';
-import { apiPost, apiGet } from '../../../lib/api';
+import { writeSession } from '../../lib/session';
+import { apiPost, apiGet } from '../../lib/api';
 
 type Plan = {
   id: number;
@@ -149,7 +149,7 @@ export default function RegisterPage() {
           </button>
           <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-secondary)' }}>
             Already have an account?{' '}
-            <a href="/auth/login" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 600 }}>
+            <a href="/login" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 600 }}>
               Sign in
             </a>
           </p>

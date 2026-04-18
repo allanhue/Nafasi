@@ -26,7 +26,7 @@ export function ProtectedRoute({
     const session = readSession();
     
     if (!session?.token) {
-      router.replace('/auth/login');
+      router.replace('/login');
       return;
     }
 

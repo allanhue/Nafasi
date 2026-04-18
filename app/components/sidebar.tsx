@@ -24,13 +24,15 @@ type UserProfile = {
 
 export default function Sidebar({
   user,
+  role,
 }: {
   user: UserProfile;
+  role?: string | null;
 }) {
   const pathname = usePathname();
   const { logout, isLoading } = useLogout();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const { navItems, canAccessOrganizations } = useRoleBasedNavigation();
+  const { navItems, canAccessOrganizations } = useRoleBasedNavigation(role);
 
   const handleLogoutConfirm = async () => {
     await logout();

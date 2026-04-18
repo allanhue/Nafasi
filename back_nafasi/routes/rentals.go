@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 )
@@ -209,6 +210,7 @@ func (s *RentalService) HandleCreateTenant(w http.ResponseWriter, r *http.Reques
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("ERROR: Failed to decode tenant request: %v", err)
 		respondError(w, http.StatusBadRequest, "invalid request")
 		return
 	}
@@ -224,10 +226,12 @@ func (s *RentalService) HandleCreateTenant(w http.ResponseWriter, r *http.Reques
 	`, req.Name, req.Email, req.Phone, req.PropertyID).Scan(&id)
 
 	if err != nil {
+		log.Printf("ERROR: Failed to create tenant - %v | Request: Name=%s, Email=%s, Phone=%s, PropertyID=%s", err, req.Name, req.Email, req.Phone, req.PropertyID)
 		respondError(w, http.StatusInternalServerError, "failed to create tenant")
 		return
 	}
 
+	log.Printf("SUCCESS: Tenant created with ID: %s", id)
 	respondJSON(w, http.StatusCreated, map[string]string{"id": id, "message": "tenant created"})
 }
 

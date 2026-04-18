@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { writeSession, readSession } from '../../../lib/session';
-import { apiPost } from '../../../lib/api';
+import { writeSession, readSession } from '../../lib/session';
+import { apiPost } from '../../lib/api';
 import { AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 
 type LoginResponse = {
@@ -220,7 +220,7 @@ export default function LoginPage() {
           {/* Sign Up Link */}
           <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-secondary)' }}>
             Don't have an account?{' '}
-            <a href="/auth/register" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 600 }}>
+            <a href="/register" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 600 }}>
               Create one
             </a>
           </p>

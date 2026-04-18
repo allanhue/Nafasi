@@ -18,6 +18,7 @@ type UserProfile = {
   avatar: string;
   contexts: ServiceContext[];
   activeContext: ServiceContext;
+  role?: string | null;
 };
 
 type NavItem = {
@@ -77,6 +78,7 @@ const DEFAULT_USER: UserProfile = {
   avatar: 'U',
   contexts: ['rental', 'inventory', 'spaces'],
   activeContext: 'rental',
+  role: null,
 };
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
@@ -151,6 +153,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         avatar: (displayName || 'U').substring(0, 1).toUpperCase(),
         contexts,
         activeContext: preferred,
+        role,
       }));
     };
 
@@ -173,7 +176,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         if (!response.ok) {
           if (!isPublicRoute(pathname)) {
             clearSession();
-            router.replace('/auth/login');
+            router.replace('/login');
           }
           syncFromSession(null);
           return;
@@ -260,6 +263,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <div className="app-shell">
           <Sidebar
             user={user}
+            role={user.role}
           />
           <div className="page-content">
             <NavBar

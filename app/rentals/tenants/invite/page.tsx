@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { readSession } from '../../lib/session';
-import { canAccess, ROLES } from '../../lib/roles';
-import { apiPost, apiGet } from '../../lib/api';
+import { readSession } from '../../../lib/session';
+import { canAccess, ROLES } from '../../../lib/roles';
+import { apiPost, apiGet } from '../../../lib/api';
 import Link from 'next/link';
 import { Plus, Mail, Trash2, Copy, Check } from 'lucide-react';
 
@@ -102,7 +102,7 @@ export default function TenantsInvitePage() {
   };
 
   const handleCopyInviteLink = (email: string) => {
-    const inviteLink = `${window.location.origin}/auth/register?invite=${email}`;
+    const inviteLink = `${window.location.origin}/register?invite=${email}`;
     navigator.clipboard.writeText(inviteLink);
     setCopiedInvite(email);
     setTimeout(() => setCopiedInvite(null), 2000);

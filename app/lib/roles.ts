@@ -152,10 +152,18 @@ export interface NavItem {
    NAVIGATION HOOK (Consolidated)
    ============================================================ */
 
-export function useRoleBasedNavigation() {
+export function useRoleBasedNavigation(providedRole?: string | null) {
   return useMemo(() => {
-    const session = readSession();
-    const userRole: UserRole = (session?.role as UserRole) || ROLES.USER;
+    let userRole: UserRole;
+    
+    if (providedRole) {
+      // Use provided role if available (e.g., from parent component)
+      userRole = (providedRole as UserRole) || ROLES.USER;
+    } else {
+      // Fall back to reading from session
+      const session = readSession();
+      userRole = (session?.role as UserRole) || ROLES.USER;
+    }
 
     const allNavItems: NavItem[] = [
       {
@@ -279,5 +287,5 @@ export function useRoleBasedNavigation() {
       userRole,
       canAccessOrganizations: permissions.canAccessOrganizations,
     };
-  }, []);
+  }, [providedRole]);
 }

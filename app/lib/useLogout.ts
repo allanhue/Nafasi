@@ -17,7 +17,7 @@ export function useLogout() {
       if (!session?.token) {
         // No session, just clear and redirect
         clearSession();
-        router.push('/auth/login');
+        router.push('/login');
         return;
       }
 
@@ -37,7 +37,7 @@ export function useLogout() {
       
       // Small delay to ensure session is cleared before redirect
       setTimeout(() => {
-        router.push('/auth/login');
+        router.push('/login');
       }, 100);
     } catch (err) {
       console.error('Logout error:', err);
@@ -46,7 +46,7 @@ export function useLogout() {
       // Still attempt to clear local session and redirect
       clearSession();
       setTimeout(() => {
-        router.push('/auth/login');
+        router.push('/login');
       }, 100);
     } finally {
       setIsLoading(false);
