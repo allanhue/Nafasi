@@ -35,6 +35,7 @@ func main() {
 	}
 
 	authHandler := routes.NewAuthHandler(db)
+	featureHandler := routes.NewFeatureHandler(db)
 	mailer := routes.NewMailerFromEnv()
 	mux := http.NewServeMux()
 
@@ -46,6 +47,12 @@ func main() {
 	mux.HandleFunc("POST /mail/subscription", mailer.SubscriptionInterest)
 	mux.Handle("GET /auth/me", authHandler.RequireRole(http.HandlerFunc(authHandler.Me), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("GET /admin/users", authHandler.RequireRole(http.HandlerFunc(authHandler.ListUsers), "system_admin", "admin"))
+	mux.Handle("GET /api/rentals", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListRentals), "system_admin", "admin", "provider", "customer"))
+	mux.Handle("POST /api/rentals", authHandler.RequireRole(http.HandlerFunc(featureHandler.CreateRental), "system_admin", "admin", "provider"))
+	mux.Handle("GET /api/warehouses", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListWarehouses), "system_admin", "admin", "provider", "customer"))
+	mux.Handle("POST /api/warehouses", authHandler.RequireRole(http.HandlerFunc(featureHandler.CreateWarehouse), "system_admin", "admin", "provider"))
+	mux.Handle("GET /api/spaces", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListSpaces), "system_admin", "admin", "provider", "customer"))
+	mux.Handle("POST /api/spaces", authHandler.RequireRole(http.HandlerFunc(featureHandler.CreateSpace), "system_admin", "admin", "provider"))
 
 	port := os.Getenv("PORT")
 	if port == "" {

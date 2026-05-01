@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# nafasi
+> One platform. Three services. Built for Kenyan SMEs.
 
-## Getting Started
 
-First, run the development server:
+**Nafasi**  is a multi-tenant SaaS platform that unifies rental property management, inventory tracking and space booking under a single identity.
+
+The same user can hold multiple roles simultaneously. A landlord can also manage a warehouse and list a rooftop as a bookable event space — one login, one dashboard, context switcher in the sidebar.
+
+
+## Getting started
+
+### Prerequisites
+
+- Node.js 18+
+- Go 1.21+
+- PostgreSQL 15+
+- Redis 7+
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Clone the repo
+git clone https://github.com/yourorg/nafasi.git
+cd nafasi
+
+# Install frontend dependencies
+npm install
+
+# Copy environment variables
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Redis
+REDIS_URL=redis://localhost:6379
+```
 
-## Learn More
+### Run locally
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# Start the frontend
+npm run dev
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Contributing
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This is currently a solo build. If you want to contribute, open an issue first to discuss what you'd like to change.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# Create a feature branch
+git checkout -b feature/your-feature-name
+
+# Make your changes, then
+git commit -m "feat: describe what you did"
+git push origin feature/your-feature-name
+```
+
+Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
+
+---
+
+## License
+
+Private and confidential. All rights reserved.

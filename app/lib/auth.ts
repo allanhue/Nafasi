@@ -48,3 +48,9 @@ export function saveSession(auth: AuthResponse) {
   window.localStorage.setItem("nafasi_user", JSON.stringify(auth.user));
   window.localStorage.setItem("nafasi_session_expires_at", auth.expiresAt);
 }
+
+export function clearSession() {
+  window.localStorage.removeItem("nafasi_token");
+  window.localStorage.removeItem("nafasi_user");
+  window.localStorage.removeItem("nafasi_session_expires_at");
+}

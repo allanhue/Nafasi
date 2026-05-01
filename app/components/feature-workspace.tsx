@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Navbar from "@/app/components/navbar";
 import Sidebar from "@/app/components/sidebar";
-import { features, type FeatureKey } from "@/app/lib/features";
+import { features, getFeatureSections, type FeatureKey } from "@/app/lib/features";
 
 type FeatureWorkspaceProps = {
   featureKey: FeatureKey;
@@ -9,6 +9,7 @@ type FeatureWorkspaceProps = {
 
 export default function FeatureWorkspace({ featureKey }: FeatureWorkspaceProps) {
   const feature = features.find((item) => item.key === featureKey) ?? features[0];
+  const sections = getFeatureSections(feature);
 
   return (
     <div className="min-h-screen bg-[#f5f6f1] text-[#20231f]">
@@ -51,12 +52,20 @@ export default function FeatureWorkspace({ featureKey }: FeatureWorkspaceProps) 
             </div>
 
             <div className="mt-6 grid gap-3 md:grid-cols-2">
-              {feature.modules.map((module) => (
-                <article className="rounded-lg border border-[#e1e5db] bg-white p-4" key={module.title}>
-                  <h2 className="text-lg font-semibold text-[#20231f]">{module.title}</h2>
-                  <p className="mt-2 text-sm leading-6 text-[#5d665d]">{module.description}</p>
-                </article>
-              ))}
+              {sections
+                .filter((section) => section.type === "module")
+                .map((section) => (
+                  <Link
+                    className="rounded-lg border border-[#e1e5db] bg-white p-4 hover:border-[#9aa78f]"
+                    href={section.href}
+                    key={section.slug}
+                  >
+                    <h2 className="text-lg font-semibold text-[#20231f]">{section.title}</h2>
+                    <p className="mt-2 text-sm leading-6 text-[#5d665d]">
+                      {section.description}
+                    </p>
+                  </Link>
+                ))}
             </div>
           </section>
         </main>

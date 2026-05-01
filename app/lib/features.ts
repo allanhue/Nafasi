@@ -29,6 +29,48 @@ export type Feature = {
   tasks: string[];
 };
 
+export type FeatureSection = {
+  title: string;
+  slug: string;
+  href: string;
+  description: string;
+  type: "overview" | "module" | "reports";
+};
+
+export function sectionSlug(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function getFeatureSections(feature: Feature): FeatureSection[] {
+  return [
+    {
+      title: "Overview",
+      slug: "overview",
+      href: feature.route,
+      description: feature.description,
+      type: "overview",
+    },
+    ...feature.modules.map((module) => ({
+      title: module.title,
+      slug: sectionSlug(module.title),
+      href: `${feature.route}/section?item=${sectionSlug(module.title)}`,
+      description: module.description,
+      type: "module" as const,
+    })),
+    {
+      title: "Reports",
+      slug: "reports",
+      href: `${feature.route}/section?item=reports`,
+      description: `Track ${feature.label.toLowerCase()} performance, follow-up work, and operational trends.`,
+      type: "reports",
+    },
+  ];
+}
+
 export const features: Feature[] = [
   {
     key: "rentals",

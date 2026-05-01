@@ -93,6 +93,23 @@ func MigrateDB(ctx context.Context, db *sql.DB) error {
 			('customer', 'dashboard', TRUE, FALSE),
 			('customer', 'account', TRUE, TRUE)
 		ON CONFLICT (role, feature_key) DO NOTHING`,
+		`CREATE TABLE IF NOT EXISTS feature_items (
+			id BIGSERIAL PRIMARY KEY,
+			feature_key TEXT NOT NULL,
+			section_key TEXT NOT NULL,
+			title TEXT NOT NULL,
+			description TEXT NOT NULL DEFAULT '',
+			status TEXT NOT NULL DEFAULT 'active',
+			location TEXT NOT NULL DEFAULT '',
+			owner_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+			metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			CONSTRAINT feature_items_feature_check CHECK (feature_key IN ('rentals', 'warehouses', 'spaces'))
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_feature_items_feature_key ON feature_items(feature_key)`,
+		`CREATE INDEX IF NOT EXISTS idx_feature_items_section_key ON feature_items(section_key)`,
+		`CREATE INDEX IF NOT EXISTS idx_feature_items_owner_id ON feature_items(owner_id)`,
 	}
 
 	for _, statement := range statements {
