@@ -19,6 +19,12 @@ export default function Navbar({ activeFeature }: NavbarProps) {
           </span>
         </Link>
         <nav className="hidden items-center gap-2 text-sm font-medium text-[#677067] lg:flex">
+          <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/auth/login">
+            Login
+          </Link>
+          <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/auth/sign_up">
+            Sign up
+          </Link>
           <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/account">
             Account
           </Link>

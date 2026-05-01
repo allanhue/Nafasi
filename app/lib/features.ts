@@ -1,3 +1,5 @@
+export type UserRole = "system_admin" | "admin" | "provider" | "customer";
+
 export type FeatureKey = "rentals" | "warehouses" | "spaces";
 
 export type Feature = {
@@ -10,6 +12,7 @@ export type Feature = {
   dashboardTitle: string;
   customerRole: string;
   providerRole: string;
+  allowedRoles: UserRole[];
   modules: Array<{
     title: string;
     description: string;
@@ -38,6 +41,7 @@ export const features: Feature[] = [
     dashboardTitle: "Rental Portfolio Overview",
     customerRole: "Tenants search, request viewings, apply, and track lease progress.",
     providerRole: "Landlords and agents publish units, review leads, schedule viewings, and close leases.",
+    allowedRoles: ["system_admin", "admin", "provider", "customer"],
     modules: [
       {
         title: "Property Listings",
@@ -84,6 +88,7 @@ export const features: Feature[] = [
     dashboardTitle: "Warehouse Leasing Overview",
     customerRole: "Customers request storage by size, duration, goods type, access needs, and location.",
     providerRole: "Warehouse operators publish capacity, quote customers, manage access, and coordinate logistics.",
+    allowedRoles: ["system_admin", "admin", "provider", "customer"],
     modules: [
       {
         title: "Storage Requests",
@@ -130,6 +135,7 @@ export const features: Feature[] = [
     dashboardTitle: "Event Space Overview",
     customerRole: "Customers discover events, reserve tickets, and contact organizers or venues.",
     providerRole: "Venue owners and promoters publish events, manage bookings, sell tickets, and post updates.",
+    allowedRoles: ["system_admin", "admin", "provider", "customer"],
     modules: [
       {
         title: "Events",
