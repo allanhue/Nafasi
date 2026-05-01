@@ -28,12 +28,6 @@ export default function FeatureWorkspace({ featureKey }: FeatureWorkspaceProps) 
                 </h1>
                 <p className="mt-3 text-base leading-7 text-[#5d665d]">{feature.description}</p>
               </div>
-              <Link
-                className="rounded-md bg-[#1d3d35] px-4 py-2 text-center text-sm font-semibold text-white hover:bg-[#244c42]"
-                href="/account"
-              >
-                Switch account feature
-              </Link>
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">

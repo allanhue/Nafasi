@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import LoadingOverlay, { ButtonSpinner } from "@/app/components/loading-overlay";
 import { authRequest, saveSession, type AuthResponse } from "@/app/lib/auth";
 
 export default function Login() {
@@ -33,6 +34,7 @@ export default function Login() {
 
   return (
     <main className="grid min-h-screen place-items-center bg-[#f5f6f1] px-4 py-10 text-[#20231f]">
+      <LoadingOverlay isLoading={isSubmitting} label="Logging in..." />
       <section className="w-full max-w-md rounded-lg border border-[#d8ddd0] bg-[#fbfcf8] p-6 shadow-sm">
         <Link className="text-sm font-semibold text-[#1d3d35]" href="/">
           Nafasi
@@ -75,7 +77,7 @@ export default function Login() {
           ) : null}
 
           <button
-            className="w-full rounded-md bg-[#1d3d35] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-md bg-[#1d3d35] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isSubmitting}
             type="submit"
           >

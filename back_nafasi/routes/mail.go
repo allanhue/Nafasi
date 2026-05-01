@@ -164,3 +164,56 @@ func (m *Mailer) SubscriptionInterest(w http.ResponseWriter, r *http.Request) {
 		"message": "Subscription interest sent",
 	})
 }
+
+func (m *Mailer) HelpRequest(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Issue string `json:"issue"`
+		Email string `json:"email"`
+		Name  string `json:"name"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	req.Issue = strings.TrimSpace(req.Issue)
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	req.Name = strings.TrimSpace(req.Name)
+
+	if len(req.Issue) < 10 {
+		writeError(w, http.StatusBadRequest, "Please describe the issue in at least 10 characters")
+		return
+	}
+
+	adminTo := m.supportTo
+	if adminTo == "" {
+		adminTo = m.fromEmail
+	}
+	if adminTo == "" {
+		writeError(w, http.StatusInternalServerError, "Support email is not configured")
+		return
+	}
+
+	fromLine := "User did not provide profile details"
+	if req.Email != "" || req.Name != "" {
+		fromLine = fmt.Sprintf("Name: %s\nEmail: %s", req.Name, req.Email)
+	}
+
+	if err := m.Send(MailMessage{
+		To:      []MailContact{{Email: adminTo, Name: "Nafasi support"}},
+		Subject: "New Nafasi help request",
+		TextBody: fmt.Sprintf(
+			"%s\n\nIssue:\n%s",
+			fromLine,
+			req.Issue,
+		),
+	}); err != nil {
+		writeError(w, http.StatusBadGateway, "Could not send help request")
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, map[string]string{
+		"message": "Help request sent",
+	})
+}

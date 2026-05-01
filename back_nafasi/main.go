@@ -5,7 +5,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -14,10 +16,13 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
 	if err := loadEnv(".env"); err != nil {
 		log.Printf("env file not loaded: %v", err)
+	} else {
+		log.Print("env loaded from .env")
 	}
 
 	db, err := ConnectDB(ctx)
@@ -25,14 +30,17 @@ func main() {
 		log.Fatalf("database connection failed: %v", err)
 	}
 	defer db.Close()
+	log.Print("database connected")
 
 	if err := MigrateDB(ctx, db); err != nil {
 		log.Fatalf("database migration failed: %v", err)
 	}
+	log.Print("database migrations applied")
 
 	if err := SeedOwner(ctx, db); err != nil {
 		log.Fatalf("owner seed failed: %v", err)
 	}
+	log.Print("owner seed checked")
 
 	authHandler := routes.NewAuthHandler(db)
 	featureHandler := routes.NewFeatureHandler(db)
@@ -45,6 +53,7 @@ func main() {
 	mux.HandleFunc("POST /auth/signup", authHandler.SignUp)
 	mux.HandleFunc("POST /auth/login", authHandler.Login)
 	mux.HandleFunc("POST /mail/subscription", mailer.SubscriptionInterest)
+	mux.HandleFunc("POST /mail/help", mailer.HelpRequest)
 	mux.Handle("GET /auth/me", authHandler.RequireRole(http.HandlerFunc(authHandler.Me), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("GET /admin/users", authHandler.RequireRole(http.HandlerFunc(authHandler.ListUsers), "system_admin", "admin"))
 	mux.Handle("GET /api/rentals", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListRentals), "system_admin", "admin", "provider", "customer"))
@@ -61,14 +70,54 @@ func main() {
 
 	server := &http.Server{
 		Addr:              ":" + port,
-		Handler:           withCORS(mux),
+		Handler:           withRequestLogger(withCORS(mux)),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	log.Printf("nafasi api listening on :%s", port)
-	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatal(err)
+	go func() {
+		log.Printf("nafasi api listening on :%s", port)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}()
+
+	<-ctx.Done()
+	log.Print("shutdown signal received")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Printf("server shutdown failed: %v", err)
+		return
 	}
+	log.Print("nafasi api stopped")
+}
+
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
+
+func (rec *statusRecorder) WriteHeader(status int) {
+	rec.status = status
+	rec.ResponseWriter.WriteHeader(status)
+}
+
+func withRequestLogger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		startedAt := time.Now()
+		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
+
+		log.Printf("request started method=%s path=%s remote=%s", r.Method, r.URL.RequestURI(), r.RemoteAddr)
+		next.ServeHTTP(rec, r)
+		log.Printf(
+			"request completed method=%s path=%s status=%d duration=%s",
+			r.Method,
+			r.URL.RequestURI(),
+			rec.status,
+			time.Since(startedAt).Round(time.Millisecond),
+		)
+	})
 }
 
 func withCORS(next http.Handler) http.Handler {

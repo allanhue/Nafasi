@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
+import LoadingOverlay, { ButtonSpinner } from "@/app/components/loading-overlay";
 import { API_BASE_URL, roleLabels, signUpRoles } from "@/app/lib/auth";
 import type { UserRole } from "@/app/lib/features";
 
@@ -60,6 +61,7 @@ export default function SubscriptionPage() {
 
   return (
     <main className="min-h-screen bg-[#f5f6f1] px-4 py-10 text-[#20231f] sm:px-6 lg:px-8">
+      <LoadingOverlay isLoading={isSubmitting} label="Sending..." />
       <div className="mx-auto w-full max-w-7xl">
         <div className="flex items-center justify-between gap-4">
           <Link className="text-sm font-semibold text-[#1d3d35]" href="/home">
@@ -131,7 +133,7 @@ export default function SubscriptionPage() {
             {message ? <p className="mt-4 rounded-md border border-[#b8d6b8] bg-[#f2fbf2] px-3 py-2 text-sm text-[#225522]">{message}</p> : null}
             {error ? <p className="mt-4 rounded-md border border-[#efc7c7] bg-[#fff5f5] px-3 py-2 text-sm text-[#9b1c1c]">{error}</p> : null}
 
-            <button className="mt-5 w-full rounded-md bg-[#1d3d35] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" disabled={isSubmitting} type="submit">
+            <button className="mt-5 flex w-full items-center justify-center gap-2 rounded-md bg-[#1d3d35] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" disabled={isSubmitting} type="submit">
               {isSubmitting ? "Sending..." : "Send subscription request"}
             </button>
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
