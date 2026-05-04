@@ -5,7 +5,7 @@ type LoadingOverlayProps = {
 
 export default function LoadingOverlay({
   isLoading,
-  label = "Loading...",
+  label = "Loading... Please wait",
 }: LoadingOverlayProps) {
   if (!isLoading) {
     return null;

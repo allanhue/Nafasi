@@ -18,11 +18,11 @@ import (
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-
+  // statements logs loading 
 	if err := loadEnv(".env"); err != nil {
 		log.Printf("env file not loaded: %v", err)
 	} else {
-		log.Print("env loaded from .env")
+		log.Print("env loaded ")
 	}
 
 	db, err := ConnectDB(ctx)

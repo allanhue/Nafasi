@@ -39,7 +39,7 @@ func NewMailerFromEnv() *Mailer {
 	return &Mailer{
 		apiKey:    os.Getenv("BREVO_API_KEY"),
 		useAPI:    strings.EqualFold(os.Getenv("BREVO_USE_API"), "true"),
-		fromEmail: os.Getenv("MAIL_FROM"),
+		fromEmail: os.Getenv("MAIL_FROM"), 
 		fromName:  os.Getenv("MAIL_FROM_NAME"),
 		supportTo: os.Getenv("SUPPORT_MAIL_TO"),
 		httpClient: &http.Client{
