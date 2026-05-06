@@ -31,11 +31,9 @@ export default function ProfileWorkspace() {
 
   return (
     <div className="min-h-screen bg-[#f5f6f1] text-[#20231f]">
+      <Sidebar activeFeature={defaultFeature} />
       <Navbar activeFeature={defaultFeature} />
-      <div className="flex w-full">
-        <div className="w-64" /> {/* Spacer for fixed sidebar */}
-        <div className="flex-1">
-          <main className="px-4 py-5 sm:px-6 lg:px-8">
+      <main className="px-4 py-5 sm:px-6 lg:px-8 transition-all duration-300" style={{ marginLeft: "var(--sidebar-width, 16rem)" }}>
             {/* Header */}
             <section className="rounded-lg border border-[#d8ddd0] bg-[#fbfcf8] p-6 shadow-sm mb-6">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#788178]">
@@ -367,8 +365,6 @@ export default function ProfileWorkspace() {
               </div>
             )}
           </main>
-        </div>
-      </div>
     </div>
   );
 }

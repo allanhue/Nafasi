@@ -18,7 +18,7 @@ export default function Navbar({ activeFeature }: NavbarProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-[#d8ddd0] bg-[#fbfcf8]/95 backdrop-blur lg:ml-64">
+      <header className="sticky top-0 z-30 border-b border-[#d8ddd0] bg-[#fbfcf8]/95 backdrop-blur transition-all duration-300" style={{ marginLeft: "var(--sidebar-width, 16rem)" }}>
         <div className="flex min-h-16 w-full items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <Link href="/dashboard" className="flex shrink-0 items-center gap-3">
             <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#1d3d35] text-sm font-bold text-white">

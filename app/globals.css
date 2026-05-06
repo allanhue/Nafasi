@@ -3,6 +3,7 @@
 :root {
   --background: #f5f6f1;
   --foreground: #20231f;
+  --sidebar-width: 16rem; /* 256px - w-64 */
 }
 
 @theme inline {

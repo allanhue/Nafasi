@@ -13,11 +13,9 @@ export default function FeatureWorkspace({ featureKey }: FeatureWorkspaceProps) 
 
   return (
     <div className="min-h-screen bg-[#f5f6f1] text-[#20231f]">
+      <Sidebar activeFeature={feature} />
       <Navbar activeFeature={feature} />
-      <div className="flex w-full">
-        <div className="w-64 hidden lg:block" /> {/* Spacer for fixed sidebar */}
-        <Sidebar activeFeature={feature} />
-        <main className="flex-1 px-4 py-5 sm:px-6 lg:px-8">
+      <main className="px-4 py-5 sm:px-6 lg:px-8 transition-all duration-300" style={{ marginLeft: "var(--sidebar-width, 16rem)" }}>
           <section className="rounded-lg border border-[#d8ddd0] bg-[#fbfcf8] p-4 shadow-sm sm:p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="max-w-3xl">
@@ -64,7 +62,6 @@ export default function FeatureWorkspace({ featureKey }: FeatureWorkspaceProps) 
             </div>
           </section>
         </main>
-      </div>
     </div>
   );
 }
