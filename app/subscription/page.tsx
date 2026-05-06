@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import LoadingOverlay, { ButtonSpinner } from "@/app/components/loading-overlay";
+import LoadingOverlay, { ButtonSpinner } from "@/app/components/loading_overlay";
 import { API_BASE_URL, roleLabels, signUpRoles } from "@/app/lib/auth";
 import type { UserRole } from "@/app/lib/features";
 

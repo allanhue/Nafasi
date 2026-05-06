@@ -1,4 +1,4 @@
-import SectionWorkspace from "@/app/components/section-workspace";
+import SectionWorkspace from "@/app/components/section_workspace";
 
 type SpacesSectionPageProps = {
   searchParams: Promise<{ item?: string }>;

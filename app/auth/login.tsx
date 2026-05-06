@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import LoadingOverlay, { ButtonSpinner } from "@/app/components/loading-overlay";
+import LoadingOverlay, { ButtonSpinner } from "@/app/components/loading_overlay";
 import { authRequest, saveSession, type AuthResponse } from "@/app/lib/auth";
 
 export default function Login() {

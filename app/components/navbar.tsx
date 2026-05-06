@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import LoadingOverlay, { ButtonSpinner } from "@/app/components/loading-overlay";
+import LoadingOverlay, { ButtonSpinner } from "@/app/components/loading_overlay";
 import { API_BASE_URL, type AuthUser } from "@/app/lib/auth";
 import { features, type Feature } from "@/app/lib/features";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { API_BASE_URL } from "@/app/lib/auth";
-import { ButtonSpinner } from "@/app/components/loading-overlay";
+import { ButtonSpinner } from "@/app/components/loading_overlay";
 import { FormEvent, useState, useEffect } from "react";
 
 export default function HelpPage() {
