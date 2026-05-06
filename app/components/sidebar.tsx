@@ -113,8 +113,8 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
   }
 
   return (
-    <aside className="sticky top-5 hidden h-[calc(100vh-2.5rem)] w-64 shrink-0 rounded-lg border border-[#d8ddd0] bg-[#fbfcf8] p-4 lg:block">
-      <div className="flex h-full flex-col">
+    <aside className="fixed left-0 top-0 hidden h-screen w-64 shrink-0 border-r border-[#d8ddd0] bg-[#fbfcf8] p-4 lg:block overflow-y-auto">
+      <div className="flex h-full flex-col pt-16">
         <div className="border-b border-[#e3e6dc] pb-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#788178]">
             Workspace

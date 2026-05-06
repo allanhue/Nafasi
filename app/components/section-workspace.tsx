@@ -23,9 +23,10 @@ export default function SectionWorkspace({ featureKey, sectionSlug }: SectionWor
   return (
     <div className="min-h-screen bg-[#f5f6f1] text-[#20231f]">
       <Navbar activeFeature={feature} />
-      <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 py-5 sm:px-6 lg:px-8">
+      <div className="flex w-full">
+        <div className="w-64 hidden lg:block" /> {/* Spacer for fixed sidebar */}
         <Sidebar activeFeature={feature} />
-        <main className="min-w-0 flex-1">
+        <main className="flex-1 px-4 py-5 sm:px-6 lg:px-8">
           <section className="rounded-lg border border-[#d8ddd0] bg-[#fbfcf8] p-4 shadow-sm sm:p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="max-w-3xl">
