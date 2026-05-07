@@ -39,7 +39,7 @@ func NewMailerFromEnv() *Mailer {
 	return &Mailer{
 		apiKey:    os.Getenv("BREVO_API_KEY"),
 		useAPI:    strings.EqualFold(os.Getenv("BREVO_USE_API"), "true"),
-		fromEmail: os.Getenv("MAIL_FROM"), 
+		fromEmail: os.Getenv("MAIL_FROM"),
 		fromName:  os.Getenv("MAIL_FROM_NAME"),
 		supportTo: os.Getenv("SUPPORT_MAIL_TO"),
 		httpClient: &http.Client{
@@ -215,5 +215,83 @@ func (m *Mailer) HelpRequest(w http.ResponseWriter, r *http.Request) {
 
 	WriteJSON(w, http.StatusOK, map[string]string{
 		"message": "Help request sent",
+	})
+}
+
+func (m *Mailer) ApplicationSubmission(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Feature       string `json:"feature"`
+		Section       string `json:"section"`
+		Name          string `json:"name"`
+		Email         string `json:"email"`
+		Phone         string `json:"phone"`
+		Summary       string `json:"summary"`
+		Details       string `json:"details"`
+		Quantity      string `json:"quantity"`
+		PreferredDate string `json:"preferredDate"`
+		Reference     string `json:"reference"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	req.Feature = strings.TrimSpace(req.Feature)
+	req.Section = strings.TrimSpace(req.Section)
+	req.Name = strings.TrimSpace(req.Name)
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	req.Phone = strings.TrimSpace(req.Phone)
+	req.Summary = strings.TrimSpace(req.Summary)
+	req.Details = strings.TrimSpace(req.Details)
+	req.Quantity = strings.TrimSpace(req.Quantity)
+	req.PreferredDate = strings.TrimSpace(req.PreferredDate)
+	req.Reference = strings.TrimSpace(req.Reference)
+
+	if req.Feature == "" || req.Section == "" || req.Name == "" || req.Email == "" || req.Summary == "" || len(req.Details) < 10 {
+		writeError(w, http.StatusBadRequest, "Feature, section, name, email, summary, and details are required")
+		return
+	}
+
+	adminTo := m.supportTo
+	if adminTo == "" {
+		adminTo = m.fromEmail
+	}
+	if adminTo == "" {
+		writeError(w, http.StatusInternalServerError, "Support email is not configured")
+		return
+	}
+
+	textBody := fmt.Sprintf(
+		"Reference: %s\nFeature: %s\nSection: %s\n\nApplicant\nName: %s\nEmail: %s\nPhone: %s\n\nSummary: %s\nQuantity: %s\nPreferred date: %s\n\nDetails:\n%s",
+		req.Reference,
+		req.Feature,
+		req.Section,
+		req.Name,
+		req.Email,
+		req.Phone,
+		req.Summary,
+		req.Quantity,
+		req.PreferredDate,
+		req.Details,
+	)
+
+	if err := m.Send(MailMessage{
+		To:       []MailContact{{Email: adminTo, Name: "Nafasi support"}},
+		Subject:  fmt.Sprintf("New Nafasi %s submission", req.Section),
+		TextBody: textBody,
+	}); err != nil {
+		writeError(w, http.StatusBadGateway, "Could not send application")
+		return
+	}
+
+	_ = m.Send(MailMessage{
+		To:       []MailContact{{Email: req.Email, Name: req.Name}},
+		Subject:  "Nafasi submission received",
+		TextBody: fmt.Sprintf("Thanks %s. We received your %s submission and will follow up with the next step.", req.Name, req.Section),
+	})
+
+	WriteJSON(w, http.StatusOK, map[string]string{
+		"message": "Application submitted",
 	})
 }

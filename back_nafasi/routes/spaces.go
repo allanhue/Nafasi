@@ -9,3 +9,11 @@ func (h *FeatureHandler) ListSpaces(w http.ResponseWriter, r *http.Request) {
 func (h *FeatureHandler) CreateSpace(w http.ResponseWriter, r *http.Request) {
 	h.createFeature(w, r, "spaces")
 }
+
+func (h *FeatureHandler) ListSpaceModule(w http.ResponseWriter, r *http.Request) {
+	h.listFeatureModule(w, r, "spaces")
+}
+
+func (h *FeatureHandler) CreateSpaceModule(w http.ResponseWriter, r *http.Request) {
+	h.createFeatureModule(w, r, "spaces")
+}

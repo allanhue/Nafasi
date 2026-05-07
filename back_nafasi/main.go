@@ -18,7 +18,7 @@ import (
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-  // statements logs loading 
+	// statements logs loading
 	if err := loadEnv(".env"); err != nil {
 		log.Printf("env file not loaded: %v", err)
 	} else {
@@ -54,14 +54,21 @@ func main() {
 	mux.HandleFunc("POST /auth/login", authHandler.Login)
 	mux.HandleFunc("POST /mail/subscription", mailer.SubscriptionInterest)
 	mux.HandleFunc("POST /mail/help", mailer.HelpRequest)
+	mux.HandleFunc("POST /mail/application", mailer.ApplicationSubmission)
 	mux.Handle("GET /auth/me", authHandler.RequireRole(http.HandlerFunc(authHandler.Me), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("GET /admin/users", authHandler.RequireRole(http.HandlerFunc(authHandler.ListUsers), "system_admin", "admin"))
 	mux.Handle("GET /api/rentals", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListRentals), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("POST /api/rentals", authHandler.RequireRole(http.HandlerFunc(featureHandler.CreateRental), "system_admin", "admin", "provider"))
+	mux.Handle("GET /api/rentals/{section}", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListRentalModule), "system_admin", "admin", "provider", "customer"))
+	mux.Handle("POST /api/rentals/{section}", authHandler.RequireRole(http.HandlerFunc(featureHandler.CreateRentalModule), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("GET /api/warehouses", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListWarehouses), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("POST /api/warehouses", authHandler.RequireRole(http.HandlerFunc(featureHandler.CreateWarehouse), "system_admin", "admin", "provider"))
+	mux.Handle("GET /api/warehouses/{section}", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListWarehouseModule), "system_admin", "admin", "provider", "customer"))
+	mux.Handle("POST /api/warehouses/{section}", authHandler.RequireRole(http.HandlerFunc(featureHandler.CreateWarehouseModule), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("GET /api/spaces", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListSpaces), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("POST /api/spaces", authHandler.RequireRole(http.HandlerFunc(featureHandler.CreateSpace), "system_admin", "admin", "provider"))
+	mux.Handle("GET /api/spaces/{section}", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListSpaceModule), "system_admin", "admin", "provider", "customer"))
+	mux.Handle("POST /api/spaces/{section}", authHandler.RequireRole(http.HandlerFunc(featureHandler.CreateSpaceModule), "system_admin", "admin", "provider", "customer"))
 
 	port := os.Getenv("PORT")
 	if port == "" {
