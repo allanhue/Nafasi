@@ -110,6 +110,33 @@ func MigrateDB(ctx context.Context, db *sql.DB) error {
 		`CREATE INDEX IF NOT EXISTS idx_feature_items_feature_key ON feature_items(feature_key)`,
 		`CREATE INDEX IF NOT EXISTS idx_feature_items_section_key ON feature_items(section_key)`,
 		`CREATE INDEX IF NOT EXISTS idx_feature_items_owner_id ON feature_items(owner_id)`,
+		`CREATE TABLE IF NOT EXISTS notifications (
+			id BIGSERIAL PRIMARY KEY,
+			user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+			feature_key TEXT NOT NULL DEFAULT 'system',
+			title TEXT NOT NULL,
+			body TEXT NOT NULL DEFAULT '',
+			kind TEXT NOT NULL DEFAULT 'system',
+			read_at TIMESTAMPTZ,
+			metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_notifications_read_at ON notifications(read_at)`,
+		`CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at)`,
+		`CREATE TABLE IF NOT EXISTS audit_logs (
+			id BIGSERIAL PRIMARY KEY,
+			actor_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+			action TEXT NOT NULL,
+			entity_type TEXT NOT NULL,
+			entity_id TEXT NOT NULL DEFAULT '',
+			summary TEXT NOT NULL DEFAULT '',
+			metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_id ON audit_logs(actor_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs(entity_type, entity_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at)`,
 	}
 
 	for _, statement := range statements {

@@ -9,12 +9,11 @@ import {
   clearSession,
   getStoredToken,
   roleLabels,
-  signUpRoles,
   type AuthUser,
 } from "@/app/lib/auth";
 import { defaultFeature, type UserRole } from "@/app/lib/features";
 
-type AccountTab = "overview" | "settings" | "security";
+type SettingsTab = "overview" | "users" | "security" | "audit";
 
 type AuditLog = {
   id: number;
@@ -25,21 +24,45 @@ type AuditLog = {
   createdAt: string;
 };
 
-const accountTabs: Array<{ id: AccountTab; label: string }> = [
+const settingsTabs: Array<{ id: SettingsTab; label: string }> = [
   { id: "overview", label: "Overview" },
-  { id: "settings", label: "System" },
+  { id: "users", label: "Users & Roles" },
   { id: "security", label: "Security" },
+  { id: "audit", label: "Audit log" },
 ];
 
 const systemRoles: UserRole[] = ["system_admin", "admin", "provider", "customer"];
 
-export default function ProfileWorkspace() {
+export default function AdminSettings() {
   const [user] = useState<AuthUser | null>(() => readStoredUser());
-  const [activeTab, setActiveTab] = useState<AccountTab>("overview");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("overview");
+  const canAccess = user?.role === "system_admin" || user?.role === "admin";
 
   function handleSignOut() {
     clearSession();
     window.location.href = "/home";
+  }
+
+  if (!canAccess) {
+    return (
+      <div className="min-h-screen bg-[#f5f6f1] text-[#20231f]">
+        <Sidebar activeFeature={defaultFeature} />
+        <Navbar activeFeature={defaultFeature} />
+        <main className="nafasi-sidebar-offset px-4 py-5 transition-all duration-300 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <section className="rounded-lg border border-[#d8ddd0] bg-[#fbfcf8] p-6">
+              <h1 className="text-2xl font-semibold text-[#9b1c1c]">Access Denied</h1>
+              <p className="mt-2 text-[#5d665d]">
+                Only system administrators can access this settings page.
+              </p>
+              <Link href="/setup" className="mt-4 inline-block text-blue-600 hover:underline">
+                Go to user setup →
+              </Link>
+            </section>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   return (
@@ -50,17 +73,17 @@ export default function ProfileWorkspace() {
         <div className="mx-auto max-w-7xl">
           <section className="mb-6 rounded-lg border border-[#d8ddd0] bg-[#fbfcf8] p-6 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#788178]">
-              Account
+              Administration
             </p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight">System settings</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5d665d]">
-              Manage your account, workspace access, roles, and operational settings.
+              Advanced system configuration, user management, security, and operational audit logs.
             </p>
           </section>
 
           <div className="mb-6 border-b border-[#d8ddd0]">
             <div className="flex gap-1 overflow-x-auto">
-              {accountTabs.map((tab) => (
+              {settingsTabs.map((tab) => (
                 <button
                   className={`border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
                     activeTab === tab.id
@@ -77,11 +100,12 @@ export default function ProfileWorkspace() {
             </div>
           </div>
 
-          {activeTab === "overview" ? (
-            <OverviewPanel onSignOut={handleSignOut} user={user} />
-          ) : null}
-          {activeTab === "settings" ? <SystemSettingsPanel currentUser={user} /> : null}
-          {activeTab === "security" ? <SecurityPanel onSignOut={handleSignOut} /> : null}
+          {activeTab === "overview" && (
+            <OverviewPanel onSignOut={handleSignOut} user={user} systemRoles={systemRoles} />
+          )}
+          {activeTab === "users" && <UsersAndRolesPanel currentUser={user} />}
+          {activeTab === "security" && <SecurityPanel onSignOut={handleSignOut} />}
+          {activeTab === "audit" && <AuditPanel currentUser={user} />}
         </div>
       </main>
     </div>
@@ -91,9 +115,11 @@ export default function ProfileWorkspace() {
 function OverviewPanel({
   onSignOut,
   user,
+  systemRoles,
 }: {
   onSignOut: () => void;
   user: AuthUser | null;
+  systemRoles: UserRole[];
 }) {
   return (
     <div className="grid gap-6">
@@ -104,7 +130,7 @@ function OverviewPanel({
               {user?.name?.charAt(0).toUpperCase() ?? "N"}
             </div>
             <div>
-              <h2 className="text-2xl font-semibold">{user?.name ?? "Nafasi user"}</h2>
+              <h2 className="text-2xl font-semibold">{user?.name ?? "Nafasi admin"}</h2>
               <p className="text-sm text-[#5d665d]">{user?.email ?? "No active session"}</p>
               <span className="mt-2 inline-flex rounded-md bg-[#eef5df] px-3 py-1 text-sm font-semibold text-[#1d3d35]">
                 {user ? roleLabels[user.role] : "Guest"}
@@ -122,49 +148,44 @@ function OverviewPanel({
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
-        <SummaryCard label="System role" value={user ? roleLabels[user.role] : "Guest"} />
-        <SummaryCard label="Workspaces" value="3" />
-        <SummaryCard label="Role types" value={String(systemRoles.length)} />
+        <SummaryCard label="Your role" value={user ? roleLabels[user.role] : "Guest"} />
+        <SummaryCard label="Total roles" value={String(systemRoles.length)} />
+        <SummaryCard label="System access" value="Full" />
       </section>
 
       <section className="rounded-lg border border-[#e1e5db] bg-white p-6">
-        <h3 className="text-lg font-semibold">Quick actions</h3>
+        <h3 className="text-lg font-semibold">Admin controls</h3>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <Link
+          <a
             className="rounded-md bg-[#1d3d35] px-4 py-3 text-center text-sm font-semibold text-white hover:bg-[#0f2419]"
             href="/dashboard"
           >
-            Open dashboard
-          </Link>
-          <Link
+            Dashboard
+          </a>
+          <a
             className="rounded-md border border-[#b9c3b2] bg-white px-4 py-3 text-center text-sm font-semibold text-[#1d3d35] hover:bg-[#f3f4f0]"
             href="/help"
           >
             Contact support
-          </Link>
+          </a>
         </div>
       </section>
     </div>
   );
 }
 
-function SystemSettingsPanel({ currentUser }: { currentUser: AuthUser | null }) {
+function UsersAndRolesPanel({ currentUser }: { currentUser: AuthUser | null }) {
   const [users, setUsers] = useState<AuthUser[]>([]);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<UserRole>("provider");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const canManageUsers = currentUser?.role === "system_admin" || currentUser?.role === "admin";
 
   useEffect(() => {
-    if (canManageUsers) {
-      void loadUsers();
-      void loadAuditLogs();
-    }
-  }, [canManageUsers]);
+    void loadUsers();
+  }, []);
 
   async function loadUsers() {
     setError("");
@@ -216,8 +237,7 @@ function SystemSettingsPanel({ currentUser }: { currentUser: AuthUser | null }) 
       setEmail("");
       setPassword("");
       setRole("provider");
-      setMessage("User created.");
-      void loadAuditLogs();
+      setMessage("User created successfully.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create user");
     }
@@ -246,16 +266,124 @@ function SystemSettingsPanel({ currentUser }: { currentUser: AuthUser | null }) 
         throw new Error(payload.error ?? "Could not update role");
       }
       setUsers((current) => current.map((item) => (item.id === userID ? payload.user : item)));
-      setMessage("Role updated.");
-      void loadAuditLogs();
+      setMessage("Role updated successfully.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not update role");
     }
   }
 
+  return (
+    <div className="grid gap-6">
+      <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
+        <section className="rounded-lg border border-[#e1e5db] bg-white p-6">
+          <h2 className="text-lg font-semibold">Create new user</h2>
+          <form className="mt-5 grid gap-4" onSubmit={handleCreateUser}>
+            <TextInput label="Name" onChange={setName} value={name} />
+            <TextInput label="Email" onChange={setEmail} type="email" value={email} />
+            <TextInput label="Temporary password" onChange={setPassword} type="password" value={password} />
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-[#354039]">Role</span>
+              <select
+                className="form-input"
+                onChange={(event) => setRole(event.target.value as UserRole)}
+                value={role}
+                aria-label="Select user role"
+              >
+                <option value="provider">{roleLabels["provider"]}</option>
+                <option value="customer">{roleLabels["customer"]}</option>
+                <option value="admin">{roleLabels["admin"]}</option>
+              </select>
+            </label>
+            <button className="rounded-md bg-[#1d3d35] px-4 py-2 text-sm font-semibold text-white" type="submit">
+              Create user
+            </button>
+            {message ? <StatusMessage tone="success" value={message} /> : null}
+            {error ? <StatusMessage tone="error" value={error} /> : null}
+          </form>
+        </section>
+
+        <section className="rounded-lg border border-[#e1e5db] bg-white p-6">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold">Users ({users.length})</h2>
+            <button
+              className="rounded-md border border-[#d8ddd0] px-3 py-2 text-xs font-semibold text-[#1d3d35]"
+              onClick={loadUsers}
+              type="button"
+            >
+              Refresh
+            </button>
+          </div>
+          <div className="mt-5 max-h-96 space-y-2 overflow-y-auto">
+            {users.length === 0 ? (
+              <p className="text-sm text-[#5d665d]">No users created yet.</p>
+            ) : null}
+            {users.map((item) => (
+              <article className="rounded-md border border-[#e1e5db] bg-[#f8faf5] p-3" key={item.id}>
+                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-[#20231f]">{item.name}</h3>
+                    <p className="text-xs text-[#5d665d]">{item.email}</p>
+                  </div>
+                  <select
+                    className="form-input md:max-w-40 text-sm"
+                    onChange={(event) => updateRole(item.id, event.target.value as UserRole)}
+                    value={item.role}
+                    aria-label={`Change role for ${item.name}`}
+                  >
+                    <option value="provider">{roleLabels["provider"]}</option>
+                    <option value="customer">{roleLabels["customer"]}</option>
+                    <option value="admin">{roleLabels["admin"]}</option>
+                  </select>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function SecurityPanel({ onSignOut }: { onSignOut: () => void }) {
+  return (
+    <div className="grid gap-6">
+      <section className="rounded-lg border border-[#e1e5db] bg-white p-6">
+        <h2 className="text-lg font-semibold">Session security</h2>
+        <p className="mt-2 text-sm leading-6 text-[#5d665d]">
+          Sign out to end your admin session. Always sign out when leaving your device.
+        </p>
+        <button
+          className="mt-5 rounded-md border border-[#efc7c7] bg-[#fff5f5] px-4 py-2 text-sm font-semibold text-[#9b1c1c]"
+          onClick={onSignOut}
+          type="button"
+        >
+          Sign out now
+        </button>
+      </section>
+
+      <section className="rounded-lg border border-[#e1e5db] bg-white p-6">
+        <h2 className="text-lg font-semibold">Security settings</h2>
+        <p className="mt-3 text-sm text-[#5d665d]">
+          System security features and audit logging are enabled for all administrative actions.
+        </p>
+      </section>
+    </div>
+  );
+}
+
+function AuditPanel({ currentUser }: { currentUser: AuthUser | null }) {
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    void loadAuditLogs();
+  }, []);
+
   async function loadAuditLogs() {
+    setLoading(true);
     const token = getStoredToken();
     if (!token) {
+      setLoading(false);
       return;
     }
 
@@ -269,155 +397,47 @@ function SystemSettingsPanel({ currentUser }: { currentUser: AuthUser | null }) 
       }
     } catch {
       setAuditLogs([]);
+    } finally {
+      setLoading(false);
     }
   }
 
-  if (!canManageUsers) {
-    return (
-      <section className="rounded-lg border border-[#e1e5db] bg-white p-6">
-        <h2 className="text-lg font-semibold">System access</h2>
-        <p className="mt-3 text-sm leading-6 text-[#5d665d]">
-          Only admins can create roles, assign users, and manage advanced system settings.
-        </p>
-      </section>
-    );
-  }
-
   return (
-    <div className="grid gap-6">
-      <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
-      <section className="rounded-lg border border-[#e1e5db] bg-white p-6">
-        <h2 className="text-lg font-semibold">Create user</h2>
-        <form className="mt-5 grid gap-4" onSubmit={handleCreateUser}>
-          <TextInput label="Name" onChange={setName} value={name} />
-          <TextInput label="Email" onChange={setEmail} type="email" value={email} />
-          <TextInput label="Temporary password" onChange={setPassword} type="password" value={password} />
-          <label className="block">
-            <span className="mb-2 block text-sm font-semibold text-[#354039]">Role</span>
-            <select
-              className="form-input"
-              onChange={(event) => setRole(event.target.value as UserRole)}
-              value={role}
-              aria-label="Select user role"
-            >
-              {systemRoles.map((item) => (
-                <option key={item} value={item}>
-                  {roleLabels[item]}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button className="rounded-md bg-[#1d3d35] px-4 py-2 text-sm font-semibold text-white" type="submit">
-            Create user
-          </button>
-          {message ? <StatusMessage tone="success" value={message} /> : null}
-          {error ? <StatusMessage tone="error" value={error} /> : null}
-        </form>
-      </section>
-
-      <section className="rounded-lg border border-[#e1e5db] bg-white p-6">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">Users and roles</h2>
-          <button
-            className="rounded-md border border-[#d8ddd0] px-3 py-2 text-xs font-semibold text-[#1d3d35]"
-            onClick={loadUsers}
-            type="button"
-          >
-            Refresh
-          </button>
-        </div>
-        <div className="mt-5 grid gap-3">
-          {users.map((item) => (
-            <article className="rounded-md border border-[#e1e5db] bg-[#f8faf5] p-3" key={item.id}>
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold text-[#20231f]">{item.name}</h3>
-                  <p className="text-sm text-[#5d665d]">{item.email}</p>
-                </div>
-                <select
-                  className="form-input md:max-w-48"
-                  onChange={(event) => updateRole(item.id, event.target.value as UserRole)}
-                  value={item.role}
-                  aria-label={`Change role for ${item.name}`}
-                >
-                  {systemRoles.map((roleOption) => (
-                    <option key={roleOption} value={roleOption}>
-                      {roleLabels[roleOption]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-      </div>
-
-      <section className="rounded-lg border border-[#e1e5db] bg-white p-6">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">Audit log</h2>
-          <button
-            className="rounded-md border border-[#d8ddd0] px-3 py-2 text-xs font-semibold text-[#1d3d35]"
-            onClick={loadAuditLogs}
-            type="button"
-          >
-            Refresh
-          </button>
-        </div>
-        <div className="mt-5 grid gap-3">
-          {auditLogs.length === 0 ? (
-            <p className="rounded-md border border-[#e1e5db] bg-[#f8faf5] p-3 text-sm text-[#5d665d]">
-              No audit activity yet.
-            </p>
-          ) : null}
-          {auditLogs.map((item) => (
-            <article className="rounded-md border border-[#e1e5db] bg-[#f8faf5] p-3" key={item.id}>
-              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-[#20231f]">{item.summary}</p>
-                  <p className="text-xs text-[#5d665d]">
-                    {item.action} · {item.entityType} #{item.entityId}
-                  </p>
-                </div>
-                <span className="text-xs font-medium text-[#788178]">
-                  {formatAccountDate(item.createdAt)}
-                </span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function SecurityPanel({ onSignOut }: { onSignOut: () => void }) {
-  return (
-    <div className="grid gap-6">
-      <section className="rounded-lg border border-[#e1e5db] bg-white p-6">
-        <h2 className="text-lg font-semibold">Session controls</h2>
-        <p className="mt-2 text-sm leading-6 text-[#5d665d]">
-          Sign out when changing devices or after creating admin users.
-        </p>
+    <section className="rounded-lg border border-[#e1e5db] bg-white p-6">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold">System audit log</h2>
         <button
-          className="mt-5 rounded-md border border-[#efc7c7] bg-[#fff5f5] px-4 py-2 text-sm font-semibold text-[#9b1c1c]"
-          onClick={onSignOut}
+          className="rounded-md border border-[#d8ddd0] px-3 py-2 text-xs font-semibold text-[#1d3d35]"
+          onClick={loadAuditLogs}
           type="button"
+          disabled={loading}
         >
-          Sign out
+          {loading ? "Loading..." : "Refresh"}
         </button>
-      </section>
-      <section className="rounded-lg border border-[#e1e5db] bg-white p-6">
-        <h2 className="text-lg font-semibold">Allowed signup roles</h2>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {signUpRoles.map((role) => (
-            <span className="rounded-md bg-[#edf1e7] px-3 py-1 text-sm font-semibold text-[#1d3d35]" key={role}>
-              {roleLabels[role]}
-            </span>
-          ))}
-        </div>
-      </section>
-    </div>
+      </div>
+      <div className="mt-5 space-y-2">
+        {auditLogs.length === 0 ? (
+          <p className="rounded-md border border-[#e1e5db] bg-[#f8faf5] p-3 text-sm text-[#5d665d]">
+            No audit activity recorded yet.
+          </p>
+        ) : null}
+        {auditLogs.map((item) => (
+          <article className="rounded-md border border-[#e1e5db] bg-[#f8faf5] p-3" key={item.id}>
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-[#20231f]">{item.summary}</p>
+                <p className="text-xs text-[#5d665d]">
+                  {item.action} · {item.entityType} #{item.entityId}
+                </p>
+              </div>
+              <span className="text-xs font-medium text-[#788178]">
+                {formatDate(item.createdAt)}
+              </span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -469,7 +489,7 @@ function StatusMessage({ tone, value }: { tone: "success" | "error"; value: stri
   );
 }
 
-function formatAccountDate(value: string) {
+function formatDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
     return "";

@@ -24,3 +24,34 @@ a,
 input {
   outline-color: #1d3d35;
 }
+
+.nafasi-sidebar-offset {
+  margin-left: 0;
+}
+
+.form-input {
+  width: 100%;
+  border-radius: 0.375rem;
+  border: 1px solid #cfd6c9;
+  background: #ffffff;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  color: #20231f;
+  box-shadow: 0 1px 2px rgb(32 35 31 / 0.04);
+}
+
+.form-input::placeholder {
+  color: #8b9488;
+}
+
+.form-input:focus {
+  border-color: #1d3d35;
+  outline: 2px solid rgb(29 61 53 / 0.18);
+  outline-offset: 0;
+}
+
+@media (min-width: 1024px) {
+  .nafasi-sidebar-offset {
+    margin-left: var(--sidebar-width);
+  }
+}

@@ -17,7 +17,8 @@ import (
 )
 
 type AuthHandler struct {
-	db *sql.DB
+	db         *sql.DB
+	operations *OperationsHandler
 }
 
 type User struct {
@@ -39,8 +40,8 @@ var allowedRoles = map[string]bool{
 	"customer":     true,
 }
 
-func NewAuthHandler(db *sql.DB) *AuthHandler {
-	return &AuthHandler{db: db}
+func NewAuthHandler(db *sql.DB, operations *OperationsHandler) *AuthHandler {
+	return &AuthHandler{db: db, operations: operations}
 }
 
 func (h *AuthHandler) SignUp(w http.ResponseWriter, r *http.Request) {
@@ -187,6 +188,152 @@ func (h *AuthHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJSON(w, http.StatusOK, map[string]any{"users": users})
+}
+
+func (h *AuthHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	actor, ok := UserFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "Authentication required")
+		return
+	}
+
+	var req struct {
+		Name     string `json:"name"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+		Role     string `json:"role"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	req.Name = strings.TrimSpace(req.Name)
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	req.Role = strings.TrimSpace(req.Role)
+
+	if req.Name == "" || req.Email == "" || len(req.Password) < 8 || !allowedRoles[req.Role] {
+		writeError(w, http.StatusBadRequest, "Name, valid email, password of at least 8 characters, and valid role are required")
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Could not secure password")
+		return
+	}
+
+	user := User{}
+	err = h.db.QueryRowContext(
+		r.Context(),
+		`INSERT INTO users (name, email, password_hash, role)
+		 VALUES ($1, $2, $3, $4)
+		 RETURNING id, name, email, role, created_at`,
+		req.Name,
+		req.Email,
+		string(hash),
+		req.Role,
+	).Scan(&user.ID, &user.Name, &user.Email, &user.Role, &user.CreatedAt)
+	if err != nil {
+		if strings.Contains(err.Error(), "users_email_key") {
+			writeError(w, http.StatusConflict, "An account with this email already exists")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "Could not create user")
+		return
+	}
+
+	metadata, _ := json.Marshal(map[string]string{"role": user.Role, "email": user.Email})
+	if h.operations != nil {
+		_ = h.operations.RecordAudit(
+			r,
+			actor.ID,
+			"user.created",
+			"user",
+			IDString(user.ID),
+			"Created user "+user.Email,
+			json.RawMessage(metadata),
+		)
+		_ = h.operations.CreateNotification(
+			r,
+			&user.ID,
+			"account",
+			"Account created",
+			"Your Nafasi account was created with the "+user.Role+" role.",
+			"system",
+			json.RawMessage(metadata),
+		)
+	}
+
+	WriteJSON(w, http.StatusCreated, map[string]any{"user": user})
+}
+
+func (h *AuthHandler) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
+	actor, ok := UserFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "Authentication required")
+		return
+	}
+
+	userID := strings.TrimSpace(r.PathValue("id"))
+	var req struct {
+		Role string `json:"role"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	req.Role = strings.TrimSpace(req.Role)
+	if userID == "" || !allowedRoles[req.Role] {
+		writeError(w, http.StatusBadRequest, "User id and valid role are required")
+		return
+	}
+
+	user := User{}
+	err := h.db.QueryRowContext(
+		r.Context(),
+		`UPDATE users
+		 SET role = $1, updated_at = NOW()
+		 WHERE id = $2
+		 RETURNING id, name, email, role, created_at`,
+		req.Role,
+		userID,
+	).Scan(&user.ID, &user.Name, &user.Email, &user.Role, &user.CreatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		writeError(w, http.StatusNotFound, "User not found")
+		return
+	}
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Could not update role")
+		return
+	}
+
+	metadata, _ := json.Marshal(map[string]string{"role": user.Role, "email": user.Email})
+	if h.operations != nil {
+		_ = h.operations.RecordAudit(
+			r,
+			actor.ID,
+			"user.role_updated",
+			"user",
+			IDString(user.ID),
+			"Updated role for "+user.Email,
+			json.RawMessage(metadata),
+		)
+		_ = h.operations.CreateNotification(
+			r,
+			&user.ID,
+			"account",
+			"Role updated",
+			"Your Nafasi role is now "+user.Role+".",
+			"system",
+			json.RawMessage(metadata),
+		)
+	}
+
+	WriteJSON(w, http.StatusOK, map[string]any{"user": user})
 }
 
 func (h *AuthHandler) RequireRole(next http.Handler, roles ...string) http.Handler {

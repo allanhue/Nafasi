@@ -9,7 +9,8 @@ import (
 )
 
 type FeatureHandler struct {
-	db *sql.DB
+	db         *sql.DB
+	operations *OperationsHandler
 }
 
 type FeatureItem struct {
@@ -38,17 +39,17 @@ type featureCreateRequest struct {
 var featureSections = map[string]map[string]bool{
 	"rentals": {
 		"property-listings": true,
-		"viewing-requests": true,
-		"applications":     true,
-		"leases":           true,
-		"reports":          false,
+		"viewing-requests":  true,
+		"applications":      true,
+		"leases":            true,
+		"reports":           false,
 	},
 	"warehouses": {
-		"storage-requests":    true,
-		"warehouse-listings":  true,
-		"logistics-support":   true,
-		"contracts":           true,
-		"reports":             false,
+		"storage-requests":   true,
+		"warehouse-listings": true,
+		"logistics-support":  true,
+		"contracts":          true,
+		"reports":            false,
 	},
 	"spaces": {
 		"events":   true,
@@ -59,8 +60,8 @@ var featureSections = map[string]map[string]bool{
 	},
 }
 
-func NewFeatureHandler(db *sql.DB) *FeatureHandler {
-	return &FeatureHandler{db: db}
+func NewFeatureHandler(db *sql.DB, operations *OperationsHandler) *FeatureHandler {
+	return &FeatureHandler{db: db, operations: operations}
 }
 
 func (h *FeatureHandler) ListRentals(w http.ResponseWriter, r *http.Request) {
@@ -183,7 +184,7 @@ func (h *FeatureHandler) createFeature(w http.ResponseWriter, r *http.Request, f
 		return
 	}
 
-	req, err := decodeFeatureCreateRequest(r)
+	req, err := decodeFeatureCreateRequest(r, "active")
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
@@ -199,6 +200,7 @@ func (h *FeatureHandler) createFeature(w http.ResponseWriter, r *http.Request, f
 		writeError(w, http.StatusInternalServerError, "Could not create feature item")
 		return
 	}
+	h.recordFeatureCreate(r, user, item, "feature.created")
 
 	WriteJSON(w, http.StatusCreated, map[string]any{"item": item})
 }
@@ -224,7 +226,7 @@ func (h *FeatureHandler) createFeatureWithSection(w http.ResponseWriter, r *http
 		return
 	}
 
-	req, err := decodeFeatureCreateRequest(r)
+	req, err := decodeFeatureCreateRequest(r, "submitted")
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
@@ -241,11 +243,42 @@ func (h *FeatureHandler) createFeatureWithSection(w http.ResponseWriter, r *http
 		writeError(w, http.StatusInternalServerError, "Could not create feature item")
 		return
 	}
+	h.recordFeatureCreate(r, user, item, "feature.submitted")
 
 	WriteJSON(w, http.StatusCreated, map[string]any{"item": item})
 }
 
-func decodeFeatureCreateRequest(r *http.Request) (featureCreateRequest, error) {
+func (h *FeatureHandler) recordFeatureCreate(r *http.Request, user User, item FeatureItem, action string) {
+	if h.operations == nil {
+		return
+	}
+
+	metadata, _ := json.Marshal(map[string]string{
+		"featureKey": item.FeatureKey,
+		"sectionKey": item.SectionKey,
+		"status":     item.Status,
+	})
+	_ = h.operations.RecordAudit(
+		r,
+		user.ID,
+		action,
+		"feature_item",
+		IDString(item.ID),
+		"Created "+item.SectionKey+" item: "+item.Title,
+		metadata,
+	)
+	_ = h.operations.CreateNotification(
+		r,
+		nil,
+		item.FeatureKey,
+		"New "+item.SectionKey+" submission",
+		item.Title+" was added to the workspace queue.",
+		"request",
+		metadata,
+	)
+}
+
+func decodeFeatureCreateRequest(r *http.Request, defaultStatus string) (featureCreateRequest, error) {
 	req := featureCreateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return req, err
@@ -257,7 +290,7 @@ func decodeFeatureCreateRequest(r *http.Request) (featureCreateRequest, error) {
 	req.Status = strings.TrimSpace(req.Status)
 	req.Location = strings.TrimSpace(req.Location)
 	if req.Status == "" {
-		req.Status = "submitted"
+		req.Status = defaultStatus
 	}
 	if len(req.Metadata) == 0 {
 		req.Metadata = json.RawMessage(`{}`)
@@ -274,12 +307,12 @@ func (h *FeatureHandler) insertFeatureItem(r *http.Request, ownerID int64, featu
 		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		 RETURNING id, feature_key, section_key, title, description, status, location, owner_id, metadata, created_at, updated_at`,
 		featureKey,
-		sectionKey,
+		req.SectionKey,
 		req.Title,
 		req.Description,
 		req.Status,
 		req.Location,
-		user.ID,
+		ownerID,
 		req.Metadata,
 	).Scan(
 		&item.ID,

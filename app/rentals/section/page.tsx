@@ -1,4 +1,4 @@
-import SectionWorkspace from "@/app/components/section_workspace";
+import { redirect } from "next/navigation";
 
 type RentalsSectionPageProps = {
   searchParams: Promise<{ item?: string }>;
@@ -7,5 +7,5 @@ type RentalsSectionPageProps = {
 export default async function RentalsSectionPage({ searchParams }: RentalsSectionPageProps) {
   const { item } = await searchParams;
 
-  return <SectionWorkspace featureKey="rentals" sectionSlug={item ?? "property-listings"} />;
+  redirect(`/rentals/${item ?? "property-listings"}`);
 }

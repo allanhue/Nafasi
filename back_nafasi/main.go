@@ -42,8 +42,9 @@ func main() {
 	}
 	log.Print("owner seed checked")
 
-	authHandler := routes.NewAuthHandler(db)
-	featureHandler := routes.NewFeatureHandler(db)
+	operationsHandler := routes.NewOperationsHandler(db)
+	authHandler := routes.NewAuthHandler(db, operationsHandler)
+	featureHandler := routes.NewFeatureHandler(db, operationsHandler)
 	mailer := routes.NewMailerFromEnv()
 	mux := http.NewServeMux()
 
@@ -54,9 +55,14 @@ func main() {
 	mux.HandleFunc("POST /auth/login", authHandler.Login)
 	mux.HandleFunc("POST /mail/subscription", mailer.SubscriptionInterest)
 	mux.HandleFunc("POST /mail/help", mailer.HelpRequest)
-	mux.HandleFunc("POST /mail/application", mailer.ApplicationSubmission)
 	mux.Handle("GET /auth/me", authHandler.RequireRole(http.HandlerFunc(authHandler.Me), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("GET /admin/users", authHandler.RequireRole(http.HandlerFunc(authHandler.ListUsers), "system_admin", "admin"))
+	mux.Handle("POST /admin/users", authHandler.RequireRole(http.HandlerFunc(authHandler.CreateUser), "system_admin", "admin"))
+	mux.Handle("POST /admin/users/{id}/role", authHandler.RequireRole(http.HandlerFunc(authHandler.UpdateUserRole), "system_admin", "admin"))
+	mux.Handle("GET /admin/audit-logs", authHandler.RequireRole(http.HandlerFunc(operationsHandler.ListAuditLogs), "system_admin", "admin"))
+	mux.Handle("GET /notifications", authHandler.RequireRole(http.HandlerFunc(operationsHandler.ListNotifications), "system_admin", "admin", "provider", "customer"))
+	mux.Handle("POST /notifications/read-all", authHandler.RequireRole(http.HandlerFunc(operationsHandler.MarkAllNotificationsRead), "system_admin", "admin", "provider", "customer"))
+	mux.Handle("POST /notifications/{id}/read", authHandler.RequireRole(http.HandlerFunc(operationsHandler.MarkNotificationRead), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("GET /api/rentals", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListRentals), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("POST /api/rentals", authHandler.RequireRole(http.HandlerFunc(featureHandler.CreateRental), "system_admin", "admin", "provider"))
 	mux.Handle("GET /api/rentals/{section}", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListRentalModule), "system_admin", "admin", "provider", "customer"))

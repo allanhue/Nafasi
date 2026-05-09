@@ -54,3 +54,11 @@ export function clearSession() {
   window.localStorage.removeItem("nafasi_user");
   window.localStorage.removeItem("nafasi_session_expires_at");
 }
+
+export function getStoredToken() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return window.localStorage.getItem("nafasi_token");
+}

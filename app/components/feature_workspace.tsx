@@ -15,7 +15,8 @@ export default function FeatureWorkspace({ featureKey }: FeatureWorkspaceProps) 
     <div className="min-h-screen bg-[#f5f6f1] text-[#20231f]">
       <Sidebar activeFeature={feature} />
       <Navbar activeFeature={feature} />
-      <main className="px-4 py-5 sm:px-6 lg:px-8 transition-all duration-300" style={{ marginLeft: "var(--sidebar-width, 16rem)" }}>
+      <main className="nafasi-sidebar-offset px-4 py-5 transition-all duration-300 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
           <section className="rounded-lg border border-[#d8ddd0] bg-[#fbfcf8] p-4 shadow-sm sm:p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="max-w-3xl">
@@ -58,10 +59,11 @@ export default function FeatureWorkspace({ featureKey }: FeatureWorkspaceProps) 
                       {section.description}
                     </p>
                   </Link>
-                ))}
+              ))}
             </div>
           </section>
-        </main>
+        </div>
+      </main>
     </div>
   );
 }

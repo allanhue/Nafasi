@@ -95,7 +95,7 @@ export default function HelpPage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-slate-900 mb-4">Help & Support</h1>
           <p className="text-lg text-slate-600">
-            Have a question or experiencing an issue? We're here to help. Fill out the form below and our team will respond within 24 hours.
+            Have a question or experiencing an issue? We&apos;re here to help. Fill out the form below and our team will respond within 24 hours.
           </p>
         </div>
 

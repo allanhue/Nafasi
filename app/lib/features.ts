@@ -57,14 +57,14 @@ export function getFeatureSections(feature: Feature): FeatureSection[] {
     ...feature.modules.map((module) => ({
       title: module.title,
       slug: sectionSlug(module.title),
-      href: `${feature.route}/section?item=${sectionSlug(module.title)}`,
+      href: `${feature.route}/${sectionSlug(module.title)}`,
       description: module.description,
       type: "module" as const,
     })),
     {
       title: "Reports",
       slug: "reports",
-      href: `${feature.route}/section?item=reports`,
+      href: `${feature.route}/reports`,
       description: `Track ${feature.label.toLowerCase()} performance, follow-up work, and operational trends.`,
       type: "reports",
     },

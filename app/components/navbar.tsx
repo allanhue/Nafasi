@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import LoadingOverlay, { ButtonSpinner } from "@/app/components/loading_overlay";
+import LoadingOverlay from "@/app/components/loading_overlay";
+import Notifications from "@/app/components/notifications";
 import { API_BASE_URL, type AuthUser } from "@/app/lib/auth";
 import { features, type Feature } from "@/app/lib/features";
 
@@ -18,7 +19,7 @@ export default function Navbar({ activeFeature }: NavbarProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-[#d8ddd0] bg-[#fbfcf8]/95 backdrop-blur transition-all duration-300" style={{ marginLeft: "var(--sidebar-width, 16rem)" }}>
+      <header className="nafasi-sidebar-offset sticky top-0 z-30 border-b border-[#d8ddd0] bg-[#fbfcf8]/95 backdrop-blur transition-all duration-300">
         <div className="flex min-h-16 w-full items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <Link href="/dashboard" className="flex shrink-0 items-center gap-3">
             <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#1d3d35] text-sm font-bold text-white">
@@ -53,6 +54,9 @@ export default function Navbar({ activeFeature }: NavbarProps) {
           <nav className="hidden items-center gap-1 text-sm font-medium text-[#677067] xl:flex">
             <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/dashboard">
               Dashboard
+            </Link>
+            <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/analytics">
+              Analytics
             </Link>
             {features.map((feature) => (
               <Link
@@ -105,6 +109,7 @@ export default function Navbar({ activeFeature }: NavbarProps) {
       </header>
 
       <RightDrawer
+        activeFeature={activeFeature}
         mode={drawerMode}
         onClose={() => setDrawerMode(null)}
       />
@@ -113,9 +118,11 @@ export default function Navbar({ activeFeature }: NavbarProps) {
 }
 
 function RightDrawer({
+  activeFeature,
   mode,
   onClose,
 }: {
+  activeFeature: Feature;
   mode: DrawerMode;
   onClose: () => void;
 }) {
@@ -216,25 +223,12 @@ function RightDrawer({
               </button>
             </form>
           ) : (
-            <>
-              <DrawerCard title="Account ready" body="Your role permissions are active for the available workspaces." />
-              <DrawerCard title="Feature routes updated" body="Rentals, warehouses, and spaces now open section pages from the sidebar." />
-              <DrawerCard title="API activity" body="Backend requests now log method, path, status, and duration in the Go terminal." />
-            </>
+            <Notifications activeFeature={activeFeature} />
           )}
           <LoadingOverlay isLoading={isSending} label="Sending..." />
         </div>
       </aside>
     </div>
-  );
-}
-
-function DrawerCard({ title, body }: { title: string; body: string }) {
-  return (
-    <article className="rounded-lg border border-[#d8ddd0] bg-white p-4">
-      <h3 className="text-sm font-semibold text-[#20231f]">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-[#5d665d]">{body}</p>
-    </article>
   );
 }
 

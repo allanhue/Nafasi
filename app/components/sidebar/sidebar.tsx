@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { clearSession } from "@/app/lib/auth";
+import type { AuthUser } from "@/app/lib/auth";
 import { getFeatureSections, type Feature } from "@/app/lib/features";
 import { useSidebar } from "./sidebar_context";
 import {
@@ -12,6 +13,7 @@ import {
   getIconForSection,
   HelpIcon,
   PencilIcon,
+  SettingsIcon,
 } from "./sidebar_icons";
 
 type SidebarProps = {
@@ -22,45 +24,75 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { isCollapsed, setIsCollapsed } = useSidebar();
-  const activeItem =
-    typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("item");
   const menu = getFeatureSections(activeFeature);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editIcon, setEditIcon] = useState(activeFeature.shortLabel.charAt(0));
+  const [workspaceImage, setWorkspaceImage] = useState<string | null>(() =>
+    readWorkspaceImage(activeFeature.key)
+  );
+  const [user] = useState<AuthUser | null>(() => readStoredUser());
 
-  if (typeof window !== "undefined") {
+  const isAdmin = user?.role === "system_admin" || user?.role === "admin";
+  const settingsPath = isAdmin ? "/settings" : "/setup";
+
+  useEffect(() => {
     document.documentElement.style.setProperty(
       "--sidebar-width",
       isCollapsed ? "5rem" : "16rem"
     );
-  }
+  }, [isCollapsed]);
 
   function handleSignOut() {
     clearSession();
     router.push("/home");
   }
 
-  function handleSaveIcon() {
-    setShowEditModal(false);
+  function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const value = typeof reader.result === "string" ? reader.result : null;
+      setWorkspaceImage(value);
+      if (value) {
+        window.localStorage.setItem(workspaceImageKey(activeFeature.key), value);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeWorkspaceImage() {
+    setWorkspaceImage(null);
+    window.localStorage.removeItem(workspaceImageKey(activeFeature.key));
   }
 
   return (
     <>
       <aside
-        className={`fixed left-0 top-0 hidden h-screen border-r border-[#d8ddd0] bg-[#fbfcf8] transition-all duration-300 lg:block overflow-y-auto ${
+        className={`fixed left-0 top-0 z-40 hidden h-screen border-r border-[#d8ddd0] bg-[#fbfcf8] shadow-sm transition-all duration-300 lg:block overflow-y-auto ${
           isCollapsed ? "w-20" : "w-64"
         }`}
       >
-        <div className="flex h-full flex-col pt-16">
-          <div className={`border-b border-[#e3e6dc] pb-4 px-4 transition-all duration-300 ${isCollapsed ? "text-center" : ""}`}>
-            <div className="relative group">
+        <div className="flex h-full flex-col">
+          <div className={`border-b border-[#e3e6dc] px-4 pb-4 pt-4 transition-all duration-300 ${isCollapsed ? "text-center" : ""}`}>
+            <div className="relative group flex justify-center">
               <button
                 onClick={() => setShowEditModal(true)}
-                className="group/icon relative flex items-center justify-center mx-auto"
-                title="Edit workspace icon"
+                className="group/icon relative flex items-center justify-center"
+                title="Change workspace picture"
               >
-                <div className="grid h-10 w-10 place-items-center rounded-lg bg-[#1d3d35] text-sm font-bold text-white">
-                  {editIcon}
+                <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-lg bg-[#1d3d35] text-sm font-bold text-white">
+                  {workspaceImage ? (
+                    <span
+                      aria-hidden="true"
+                      className="h-full w-full bg-cover bg-center"
+                      style={{ backgroundImage: `url(${workspaceImage})` }}
+                    />
+                  ) : (
+                    activeFeature.shortLabel.charAt(0)
+                  )}
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-[#1d3d35]/80 opacity-0 group-hover/icon:opacity-100 transition-opacity">
                   <PencilIcon />
@@ -78,27 +110,23 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
             )}
           </div>
 
-          <nav className={`mt-4 ${isCollapsed ? "space-y-2 px-2" : "space-y-1 px-0"}`}>
+          <nav className={`mt-4 ${isCollapsed ? "space-y-2 px-2" : "space-y-1 px-3"}`}>
             {menu.map((item) => {
-              const isActive =
-                item.type === "overview"
-                  ? pathname === item.href
-                  : pathname === `${activeFeature.route}/section` &&
-                    activeItem === item.slug;
+              const isActive = pathname === item.href;
 
               return (
                 <Link
-                  className={`flex items-center gap-3 justify-between rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${
-                    isActive ? "bg-[#1d3d35] text-white" : "text-[#4b554d] hover:bg-[#edf1e7]"
-                  } ${isCollapsed ? "justify-center" : ""}`}
+                  className={`grid min-h-10 items-center rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${
+                    isActive ? "bg-[#1d3d35] text-white shadow-sm" : "text-[#4b554d] hover:bg-[#edf1e7]"
+                  } ${isCollapsed ? "grid-cols-1 justify-items-center" : "grid-cols-[1.25rem_1fr_auto] gap-3"}`}
                   href={item.href}
                   key={item.slug}
                   title={isCollapsed ? item.title : undefined}
                 >
-                  <span className="flex-shrink-0">{getIconForSection(item.slug)}</span>
+                  <span className="grid h-5 w-5 place-items-center">{getIconForSection(item.slug)}</span>
                   {!isCollapsed && (
                     <>
-                      <span className="flex-1 truncate">{item.title}</span>
+                      <span className="min-w-0 truncate">{item.title}</span>
                       {isActive && <span className="h-2 w-2 rounded-full bg-[#d9ff72] flex-shrink-0" />}
                     </>
                   )}
@@ -130,11 +158,21 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[#20231f] text-xs">Profile</span>
-                  <span className="block truncate text-xs text-[#788178]">Settings</span>
+                  <span className="block truncate text-xs text-[#788178]">Account</span>
                 </span>
               </Link>
             )}
             <div className={`flex ${isCollapsed ? "flex-col gap-2" : "items-center gap-2"}`}>
+              <Link
+                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  pathname === settingsPath ? "bg-[#1d3d35] text-white" : "text-[#4b554d] hover:bg-[#edf1e7]"
+                } ${isCollapsed ? "justify-center" : "flex-1"}`}
+                href={settingsPath}
+                title={isCollapsed ? (isAdmin ? "Settings" : "Setup") : undefined}
+              >
+                <SettingsIcon />
+                {!isCollapsed && <span>{isAdmin ? "Settings" : "Setup"}</span>}
+              </Link>
               <button
                 aria-label="Sign out"
                 className={`flex items-center gap-3 rounded-md px-3 py-2 text-xs font-semibold text-[#9b1c1c] hover:bg-[#fff5f5] transition-colors ${
@@ -176,31 +214,44 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
       {showEditModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center lg:ml-0">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mx-4">
-            <h2 className="text-xl font-semibold mb-4">Edit Workspace Icon</h2>
-            <div className="mb-4">
+            <h2 className="text-xl font-semibold mb-4">Workspace picture</h2>
+            <div className="mb-4 flex justify-center">
+              <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-lg bg-[#1d3d35] text-3xl font-bold text-white">
+                {workspaceImage ? (
+                  <span
+                    aria-hidden="true"
+                    className="h-full w-full bg-cover bg-center"
+                    style={{ backgroundImage: `url(${workspaceImage})` }}
+                  />
+                ) : (
+                  activeFeature.shortLabel.charAt(0)
+                )}
+              </div>
+            </div>
+            <div className="mb-6">
               <label className="block text-sm font-medium text-[#1d3d35] mb-2">
-                Icon Character (1 character)
+                Upload image
               </label>
               <input
-                type="text"
-                maxLength={1}
-                value={editIcon}
-                onChange={(e) => setEditIcon(e.target.value.toUpperCase())}
-                className="w-full px-3 py-2 border border-[#d8ddd0] rounded-md focus:ring-2 focus:ring-[#1d3d35] focus:border-transparent outline-none"
-                placeholder="N"
+                accept="image/*"
+                className="w-full rounded-md border border-[#d8ddd0] bg-white px-3 py-2 text-sm text-[#1d3d35] file:mr-3 file:rounded-md file:border-0 file:bg-[#edf1e7] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-[#1d3d35]"
+                onChange={handleImageChange}
+                type="file"
               />
-            </div>
-            <div className="flex justify-center mb-6">
-              <div className="grid h-16 w-16 place-items-center rounded-lg bg-[#1d3d35] text-2xl font-bold text-white">
-                {editIcon}
-              </div>
             </div>
             <div className="flex gap-3">
               <button
-                onClick={handleSaveIcon}
+                onClick={() => setShowEditModal(false)}
                 className="flex-1 bg-[#1d3d35] text-white px-4 py-2 rounded-md font-semibold hover:bg-[#0f2419]"
               >
-                Save
+                Done
+              </button>
+              <button
+                onClick={removeWorkspaceImage}
+                className="flex-1 bg-[#fff5f5] text-[#9b1c1c] px-4 py-2 rounded-md font-semibold hover:bg-[#fee2e2]"
+                type="button"
+              >
+                Remove
               </button>
               <button
                 onClick={() => setShowEditModal(false)}
@@ -214,4 +265,25 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
       )}
     </>
   );
+}
+
+function workspaceImageKey(featureKey: string) {
+  return `nafasi_workspace_image_${featureKey}`;
+}
+
+function readWorkspaceImage(featureKey: string) {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return window.localStorage.getItem(workspaceImageKey(featureKey));
+}
+
+function readStoredUser() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const storedUser = window.localStorage.getItem("nafasi_user");
+  return storedUser ? (JSON.parse(storedUser) as AuthUser) : null;
 }
