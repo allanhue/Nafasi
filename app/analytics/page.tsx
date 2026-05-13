@@ -37,10 +37,14 @@ type AnalyticsData = {
 };
 
 export default function AnalyticsPage() {
-  const [user] = useState<AuthUser | null>(() => readStoredUser());
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setUser(readStoredUser());
+  }, []);
 
   useEffect(() => {
     void loadAnalytics();

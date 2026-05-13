@@ -26,13 +26,16 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
   const { isCollapsed, setIsCollapsed } = useSidebar();
   const menu = getFeatureSections(activeFeature);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [workspaceImage, setWorkspaceImage] = useState<string | null>(() =>
-    readWorkspaceImage(activeFeature.key)
-  );
-  const [user] = useState<AuthUser | null>(() => readStoredUser());
+  const [workspaceImage, setWorkspaceImage] = useState<string | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
 
   const isAdmin = user?.role === "system_admin" || user?.role === "admin";
   const settingsPath = isAdmin ? "/settings" : "/setup";
+
+  useEffect(() => {
+    setUser(readStoredUser());
+    setWorkspaceImage(readWorkspaceImage(activeFeature.key));
+  }, [activeFeature.key]);
 
   useEffect(() => {
     document.documentElement.style.setProperty(
@@ -162,25 +165,23 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
                 </span>
               </Link>
             )}
-            <div className={`flex ${isCollapsed ? "flex-col gap-2" : "items-center gap-2"}`}>
+            <div className="flex flex-col gap-2">
               <Link
-                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors justify-center ${
                   pathname === settingsPath ? "bg-[#1d3d35] text-white" : "text-[#4b554d] hover:bg-[#edf1e7]"
-                } ${isCollapsed ? "justify-center" : "flex-1"}`}
+                }`}
                 href={settingsPath}
-                title={isCollapsed ? (isAdmin ? "Settings" : "Setup") : undefined}
+                title={isAdmin ? "Settings" : "Setup"}
               >
                 <SettingsIcon />
                 {!isCollapsed && <span>{isAdmin ? "Settings" : "Setup"}</span>}
               </Link>
               <button
                 aria-label="Sign out"
-                className={`flex items-center gap-3 rounded-md px-3 py-2 text-xs font-semibold text-[#9b1c1c] hover:bg-[#fff5f5] transition-colors ${
-                  isCollapsed ? "justify-center w-full" : "flex-1"
-                }`}
+                className="flex items-center gap-3 rounded-md px-3 py-2 text-xs font-semibold text-[#9b1c1c] hover:bg-[#fff5f5] transition-colors justify-center w-full"
                 onClick={handleSignOut}
                 type="button"
-                title={isCollapsed ? "Sign out" : undefined}
+                title="Sign out"
               >
                 <svg aria-hidden="true" className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M10 17l5-5-5-5" strokeLinecap="round" strokeLinejoin="round" />
@@ -190,11 +191,12 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
                 {!isCollapsed && <span>Sign out</span>}
               </button>
               <Link
-                className="p-2 rounded-md text-[#4b554d] hover:bg-[#edf1e7] transition-colors"
+                className="flex items-center gap-3 rounded-md px-3 py-2 text-[#4b554d] hover:bg-[#edf1e7] transition-colors justify-center"
                 href="/help"
                 title="Help & Support"
               >
                 <HelpIcon />
+                {!isCollapsed && <span className="text-sm font-medium">Help</span>}
               </Link>
             </div>
           </div>

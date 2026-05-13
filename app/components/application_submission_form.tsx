@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState, type ReactNode } from "react";
+import { FormEvent, useEffect, useMemo, useState, type ReactNode } from "react";
 import LoadingOverlay, { ButtonSpinner } from "@/app/components/loading_overlay";
 import { API_BASE_URL, getStoredToken, type AuthUser } from "@/app/lib/auth";
 import type { Feature, FeatureSection } from "@/app/lib/features";
@@ -173,8 +173,16 @@ export default function ApplicationSubmissionForm({
   section,
 }: ApplicationSubmissionFormProps) {
   const config = formConfigFor(feature, section);
-  const [name, setName] = useState(() => readStoredUser()?.name ?? "");
-  const [email, setEmail] = useState(() => readStoredUser()?.email ?? "");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    const user = readStoredUser();
+    if (user) {
+      setName(user.name ?? "");
+      setEmail(user.email ?? "");
+    }
+  }, []);
   const [phone, setPhone] = useState("");
   const [summary, setSummary] = useState("");
   const [details, setDetails] = useState("");

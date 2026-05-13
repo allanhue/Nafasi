@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import LoadingOverlay from "@/app/components/loading_overlay";
 import Notifications from "@/app/components/notifications";
 import { API_BASE_URL, type AuthUser } from "@/app/lib/auth";
@@ -15,7 +15,11 @@ type DrawerMode = "notifications" | "help" | null;
 
 export default function Navbar({ activeFeature }: NavbarProps) {
   const [drawerMode, setDrawerMode] = useState<DrawerMode>(null);
-  const [user] = useState<AuthUser | null>(() => readStoredUser());
+  const [user, setUser] = useState<AuthUser | null>(null);
+
+  useEffect(() => {
+    setUser(readStoredUser());
+  }, []);
 
   return (
     <>

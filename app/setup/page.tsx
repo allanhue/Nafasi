@@ -13,11 +13,19 @@ import {
 import { defaultFeature } from "@/app/lib/features";
 
 export default function UserSetup() {
-  const [user] = useState<AuthUser | null>(() => readStoredUser());
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [preferences, setPreferences] = useState<{
     emailNotifications: boolean;
     language: string;
-  }>(() => readStoredPreferences());
+  }>({
+    emailNotifications: true,
+    language: "en",
+  });
+
+  useEffect(() => {
+    setUser(readStoredUser());
+    setPreferences(readStoredPreferences());
+  }, []);
 
   function handleSignOut() {
     clearSession();

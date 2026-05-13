@@ -34,8 +34,12 @@ const settingsTabs: Array<{ id: SettingsTab; label: string }> = [
 const systemRoles: UserRole[] = ["system_admin", "admin", "provider", "customer"];
 
 export default function AdminSettings() {
-  const [user] = useState<AuthUser | null>(() => readStoredUser());
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [activeTab, setActiveTab] = useState<SettingsTab>("overview");
+
+  useEffect(() => {
+    setUser(readStoredUser());
+  }, []);
   const canAccess = user?.role === "system_admin" || user?.role === "admin";
 
   function handleSignOut() {

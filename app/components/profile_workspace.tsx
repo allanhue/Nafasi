@@ -34,8 +34,12 @@ const accountTabs: Array<{ id: AccountTab; label: string }> = [
 const systemRoles: UserRole[] = ["system_admin", "admin", "provider", "customer"];
 
 export default function ProfileWorkspace() {
-  const [user] = useState<AuthUser | null>(() => readStoredUser());
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [activeTab, setActiveTab] = useState<AccountTab>("overview");
+
+  useEffect(() => {
+    setUser(readStoredUser());
+  }, []);
 
   function handleSignOut() {
     clearSession();
