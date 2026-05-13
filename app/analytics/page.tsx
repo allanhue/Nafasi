@@ -16,6 +16,12 @@ type AnalyticsData = {
   activeSessions: number;
   totalTransactions: number;
   systemUptime: string;
+  averageTransactionValue: number;
+  conversionRate: number;
+  topFeature: string;
+  userGrowth: number;
+  transactionGrowth: number;
+  revenueGrowth: number;
   featureUsage: Array<{
     name: string;
     count: number;
@@ -33,6 +39,16 @@ type AnalyticsData = {
     users: number;
     transactions: number;
     revenue: number;
+    peak?: boolean;
+  }>;
+  hourlyDistribution: Array<{
+    hour: number;
+    transactions: number;
+  }>;
+  userSegmentation: Array<{
+    segment: string;
+    count: number;
+    percentage: number;
   }>;
 };
 
@@ -41,6 +57,7 @@ export default function AnalyticsPage() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d">("30d");
 
   useEffect(() => {
     setUser(readStoredUser());
@@ -112,56 +129,156 @@ export default function AnalyticsPage() {
             </div>
           ) : analytics ? (
             <div className="space-y-6">
-              {/* Key Metrics */}
+              {/* Time Range Selector */}
+              <div className="flex gap-2 mb-6">
+                {(["7d", "30d", "90d"] as const).map((range) => (
+                  <button
+                    key={range}
+                    onClick={() => setTimeRange(range)}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      timeRange === range
+                        ? "bg-[#1d3d35] text-white"
+                        : "bg-white border border-[#d8ddd0] text-[#4b554d] hover:bg-[#edf1e7]"
+                    }`}
+                  >
+                    {range === "7d" ? "Last 7 days" : range === "30d" ? "Last 30 days" : "Last 90 days"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Key Metrics with Trends */}
               <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <MetricCard
+                <MetricCardWithTrend
                   label="Total Users"
                   value={String(analytics.totalUsers)}
                   detail="All registered users"
+                  trend={analytics.userGrowth}
                 />
-                <MetricCard
+                <MetricCardWithTrend
                   label="Active Sessions"
                   value={String(analytics.activeSessions)}
                   detail="Currently online"
+                  trend={8.5}
                 />
-                <MetricCard
+                <MetricCardWithTrend
                   label="Total Transactions"
                   value={String(analytics.totalTransactions)}
                   detail="Completed transactions"
+                  trend={analytics.transactionGrowth}
                 />
-                <MetricCard label="System Uptime" value={analytics.systemUptime} detail="Last 30 days" />
+                <MetricCardWithTrend
+                  label="Revenue Growth"
+                  value={`+${analytics.revenueGrowth.toFixed(1)}%`}
+                  detail="vs previous period"
+                  trend={analytics.revenueGrowth}
+                />
               </section>
 
-              {/* Feature Usage */}
-              <section className="rounded-lg border border-[#e1e5db] bg-white p-6">
-                <h2 className="text-lg font-semibold mb-4">Feature usage</h2>
-                <div className="space-y-4">
-                  {analytics.featureUsage.map((feature) => (
-                    <div key={feature.name} className="flex items-center gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="text-sm font-medium text-[#20231f]">{feature.name}</p>
-                          <span className="text-xs font-semibold text-[#788178]">
-                            {feature.percentage}% ({feature.count})
-                          </span>
-                        </div>
-                <div className="h-2 bg-[#e1e5db] rounded-full overflow-hidden">
-                          <ProgressBar percentage={feature.percentage} />
+              {/* Secondary Metrics */}
+              <section className="grid gap-4 md:grid-cols-3">
+                <MetricCard
+                  label="Avg Transaction Value"
+                  value={`$${analytics.averageTransactionValue.toLocaleString()}`}
+                  detail="Average per transaction"
+                />
+                <MetricCard
+                  label="Conversion Rate"
+                  value={`${analytics.conversionRate.toFixed(1)}%`}
+                  detail="User to transaction ratio"
+                />
+                <MetricCard
+                  label="System Uptime"
+                  value={analytics.systemUptime}
+                  detail="Last 30 days"
+                />
+              </section>
+
+              {/* Feature Usage & User Segmentation */}
+              <section className="grid gap-6 lg:grid-cols-2">
+                {/* Feature Usage */}
+                <div className="rounded-lg border border-[#e1e5db] bg-white p-6">
+                  <h2 className="text-lg font-semibold mb-4">Feature usage</h2>
+                  <div className="space-y-4">
+                    {analytics.featureUsage.map((feature) => (
+                      <div key={feature.name} className="flex items-center gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-sm font-medium text-[#20231f]">{feature.name}</p>
+                            <span className="text-xs font-semibold text-[#788178]">
+                              {feature.percentage}% ({feature.count})
+                            </span>
+                          </div>
+                          <div className="h-2 bg-[#e1e5db] rounded-full overflow-hidden">
+                            <ProgressBar percentage={feature.percentage} />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                </div>
+
+                {/* User Segmentation */}
+                <div className="rounded-lg border border-[#e1e5db] bg-white p-6">
+                  <h2 className="text-lg font-semibold mb-4">User segmentation</h2>
+                  <div className="space-y-4">
+                    {analytics.userSegmentation.map((segment) => (
+                      <div key={segment.segment} className="flex items-center gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-sm font-medium text-[#20231f]">{segment.segment}</p>
+                            <span className="text-xs font-semibold text-[#788178]">
+                              {segment.percentage}% ({segment.count})
+                            </span>
+                          </div>
+                          <div className="h-2 bg-[#e1e5db] rounded-full overflow-hidden">
+                            <ProgressBar percentage={segment.percentage} />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </section>
 
-              {/* Daily Metrics Chart */}
+              {/* Hourly Distribution Chart */}
+              <section className="rounded-lg border border-[#e1e5db] bg-white p-6">
+                <h2 className="text-lg font-semibold mb-4">Transaction distribution by hour</h2>
+                <div className="space-y-3">
+                  {analytics.hourlyDistribution.map((hour) => {
+                    const maxTransactions = Math.max(...analytics.hourlyDistribution.map((h) => h.transactions));
+                    const percentage = (hour.transactions / maxTransactions) * 100;
+                    return (
+                      <div key={hour.hour} className="flex items-center gap-3">
+                        <span className="text-xs font-medium text-[#788178] w-12">{`${hour.hour.toString().padStart(2, "0")}:00`}</span>
+                        <div className="flex-1 h-6 bg-[#e1e5db] rounded-md overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-[#1d3d35] to-[#2d5d4d] transition-all duration-300"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-semibold text-[#1d3d35] w-12 text-right">{hour.transactions}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {/* Activity Trend */}
               <section className="rounded-lg border border-[#e1e5db] bg-white p-6">
                 <h2 className="text-lg font-semibold mb-4">Activity trend</h2>
                 <div className="space-y-3">
                   {analytics.dailyMetrics.map((metric) => (
-                    <div key={metric.date} className="flex items-center justify-between pb-3 border-b border-[#e1e5db] last:border-0">
+                    <div
+                      key={metric.date}
+                      className={`flex items-center justify-between pb-3 border-b border-[#e1e5db] last:border-0 ${
+                        metric.peak ? "bg-[#eef5df] -mx-6 px-6 py-3" : ""
+                      }`}
+                    >
                       <div>
-                        <p className="text-sm font-medium text-[#20231f]">{formatDate(metric.date)}</p>
+                        <p className="text-sm font-medium text-[#20231f]">
+                          {formatDate(metric.date)}
+                          {metric.peak && <span className="ml-2 text-xs font-semibold text-[#15803d]">● Peak</span>}
+                        </p>
                         <p className="text-xs text-[#5d665d]">
                           {metric.users} users · {metric.transactions} transactions
                         </p>
@@ -259,6 +376,39 @@ function MetricCard({
   );
 }
 
+function MetricCardWithTrend({
+  label,
+  value,
+  detail,
+  trend,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  trend: number;
+}) {
+  const isPositive = trend >= 0;
+  return (
+    <article className="rounded-lg border border-[#e1e5db] bg-white p-6">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#788178]">{label}</p>
+          <p className="mt-3 text-3xl font-semibold text-[#1d3d35]">{value}</p>
+          <p className="mt-2 text-xs text-[#5d665d]">{detail}</p>
+        </div>
+        <div
+          className={`ml-2 flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold ${
+            isPositive ? "bg-[#dffcf0] text-[#15803d]" : "bg-[#fee2e2] text-[#dc2626]"
+          }`}
+        >
+          <span>{isPositive ? "↑" : "↓"}</span>
+          <span>{Math.abs(trend).toFixed(1)}%</span>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
   return date.toLocaleDateString(undefined, {
@@ -314,10 +464,21 @@ function generateMockAnalytics(): AnalyticsData {
     activeSessions: 87,
     totalTransactions: 5634,
     systemUptime: "99.8%",
+    averageTransactionValue: 2145,
+    conversionRate: 18.5,
+    topFeature: "Rentals",
+    userGrowth: 12.5,
+    transactionGrowth: 18.3,
+    revenueGrowth: 15.8,
     featureUsage: [
       { name: "Rentals", count: 2845, percentage: 45 },
       { name: "Warehouses", count: 1923, percentage: 31 },
       { name: "Event Spaces", count: 1866, percentage: 30 },
+    ],
+    userSegmentation: [
+      { segment: "Premium Users", count: 287, percentage: 23 },
+      { segment: "Active Users", count: 654, percentage: 53 },
+      { segment: "Inactive Users", count: 302, percentage: 24 },
     ],
     recentActivity: [
       {
@@ -360,8 +521,34 @@ function generateMockAnalytics(): AnalyticsData {
       { date: new Date(Date.now() - 4 * 86400000).toISOString(), users: 234, transactions: 156, revenue: 8750 },
       { date: new Date(Date.now() - 3 * 86400000).toISOString(), users: 267, transactions: 189, revenue: 10230 },
       { date: new Date(Date.now() - 2 * 86400000).toISOString(), users: 245, transactions: 168, revenue: 9120 },
-      { date: new Date(Date.now() - 1 * 86400000).toISOString(), users: 289, transactions: 203, revenue: 11890 },
+      { date: new Date(Date.now() - 1 * 86400000).toISOString(), users: 289, transactions: 203, revenue: 11890, peak: true },
       { date: new Date().toISOString(), users: 312, transactions: 218, revenue: 12450 },
+    ],
+    hourlyDistribution: [
+      { hour: 0, transactions: 45 },
+      { hour: 1, transactions: 32 },
+      { hour: 2, transactions: 28 },
+      { hour: 3, transactions: 22 },
+      { hour: 4, transactions: 18 },
+      { hour: 5, transactions: 24 },
+      { hour: 6, transactions: 58 },
+      { hour: 7, transactions: 89 },
+      { hour: 8, transactions: 134 },
+      { hour: 9, transactions: 156 },
+      { hour: 10, transactions: 168 },
+      { hour: 11, transactions: 178 },
+      { hour: 12, transactions: 145 },
+      { hour: 13, transactions: 132 },
+      { hour: 14, transactions: 156 },
+      { hour: 15, transactions: 189 },
+      { hour: 16, transactions: 198 },
+      { hour: 17, transactions: 176 },
+      { hour: 18, transactions: 145 },
+      { hour: 19, transactions: 123 },
+      { hour: 20, transactions: 98 },
+      { hour: 21, transactions: 76 },
+      { hour: 22, transactions: 54 },
+      { hour: 23, transactions: 38 },
     ],
   };
 }
