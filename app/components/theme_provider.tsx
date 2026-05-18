@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { getThemeByKey, themeStorageEvent } from "@/app/lib/themes";
-
-const PREFERENCES_KEY = "nafasi_preferences";
+import {
+  accountThemeStorageKey,
+  defaultThemeKey,
+  getThemeByKey,
+  globalThemeStorageKey,
+  themeStorageEvent,
+} from "@/app/lib/themes";
 
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -41,8 +45,27 @@ export function applyTheme(themeKey?: string | null) {
 }
 
 function readStoredThemeKey() {
+  const accountKey = accountThemeStorageKey(readCurrentAccountId());
+  const accountTheme = accountKey ? window.localStorage.getItem(accountKey) : null;
+  const globalTheme = window.localStorage.getItem(globalThemeStorageKey);
+  const legacyTheme = readLegacyPreferenceTheme();
+
+  return getThemeByKey(accountTheme ?? globalTheme ?? legacyTheme ?? defaultThemeKey).key;
+}
+
+function readCurrentAccountId() {
   try {
-    const stored = window.localStorage.getItem(PREFERENCES_KEY);
+    const storedUser = window.localStorage.getItem("nafasi_user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    return user?.email ?? user?.name ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function readLegacyPreferenceTheme() {
+  try {
+    const stored = window.localStorage.getItem("nafasi_preferences");
     const preferences = stored ? JSON.parse(stored) : {};
     return typeof preferences.theme === "string" ? preferences.theme : null;
   } catch {

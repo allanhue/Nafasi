@@ -2,22 +2,33 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import LoadingOverlay from "@/app/components/loading_overlay";
 import Navbar from "@/app/components/navbar";
 import Sidebar from "@/app/components/sidebar";
 import { applyTheme } from "@/app/components/theme_provider";
 import ThemePicker from "@/app/components/theme_picker";
 import { clearSession, roleLabels, type AuthUser } from "@/app/lib/auth";
 import { defaultFeature } from "@/app/lib/features";
-import { defaultThemeKey, themeStorageEvent, type ThemeKey } from "@/app/lib/themes";
+import {
+  accountThemeStorageKey,
+  defaultThemeKey,
+  getThemeByKey,
+  globalThemeStorageKey,
+  themeStorageEvent,
+  type ThemeKey,
+  type ThemeScope,
+} from "@/app/lib/themes";
 
 type SetupPreferences = {
   emailNotifications: boolean;
   language: string;
   theme: ThemeKey;
+  themeScope: ThemeScope;
 };
 
 export default function UserSetup() {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [isApplyingTheme, setIsApplyingTheme] = useState(false);
   const [preferences, setPreferences] = useState<SetupPreferences>(defaultPreferences());
 
   useEffect(() => {
@@ -43,28 +54,46 @@ export default function UserSetup() {
     window.localStorage.setItem("nafasi_preferences", JSON.stringify(updated));
 
     if (key === "theme") {
-      applyTheme(value as ThemeKey);
-      window.dispatchEvent(new Event(themeStorageEvent));
+      saveTheme(value as ThemeKey, updated.themeScope, user);
+      showThemeSync();
     }
+
+    if (key === "themeScope") {
+      saveTheme(updated.theme, value as ThemeScope, user);
+      showThemeSync();
+    }
+  }
+
+  function showThemeSync() {
+    setIsApplyingTheme(true);
+    window.setTimeout(() => setIsApplyingTheme(false), 550);
   }
 
   return (
     <div className="theme-bg min-h-screen">
+      <LoadingOverlay isLoading={isApplyingTheme} label="Syncing theme..." />
       <Sidebar activeFeature={defaultFeature} />
       <Navbar activeFeature={defaultFeature} />
       <main className="nafasi-sidebar-offset px-4 py-5 transition-all duration-300 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto max-w-5xl">
           <section className="theme-surface mb-6 rounded-lg border p-6 shadow-sm">
-            <p className="theme-muted text-xs font-semibold uppercase tracking-[0.18em]">
-              Account
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">Your setup</h1>
-            <p className="theme-muted mt-3 max-w-2xl text-sm leading-6">
-              Configure your account preferences and basic settings.
-            </p>
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="theme-muted text-xs font-semibold uppercase tracking-[0.18em]">
+                  Account setup
+                </p>
+                <h1 className="mt-2 text-3xl font-semibold tracking-tight">Workspace preferences</h1>
+                <p className="theme-muted mt-3 max-w-2xl text-sm leading-6">
+                  Manage account details, notifications, and system appearance from one polished control center.
+                </p>
+              </div>
+              <span className="rounded-md border border-[var(--app-border)] px-3 py-2 text-sm font-semibold theme-accent-text">
+                {preferences.themeScope === "system" ? "System theme" : "Account theme"}
+              </span>
+            </div>
           </section>
 
-          <div className="grid gap-6">
+          <div className="grid gap-5">
             <section className="theme-surface rounded-lg border p-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
@@ -96,23 +125,35 @@ export default function UserSetup() {
             </section>
 
             <section className="theme-surface rounded-lg border p-6">
-              <h2 className="text-lg font-semibold">Preferences</h2>
-              <div className="mt-5 space-y-4">
-                <label className="flex items-center gap-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold">Preferences</h2>
+                  <p className="theme-muted mt-1 text-sm">Control how Nafasi looks and behaves for your team.</p>
+                </div>
+              </div>
+              <div className="mt-5 grid gap-5">
+                <label className="flex items-center justify-between gap-4 rounded-md border border-[var(--app-border)] bg-white px-4 py-3">
+                  <span>
+                    <span className="block text-sm font-semibold text-[#354039]">
+                      Email notifications
+                    </span>
+                    <span className="theme-muted mt-1 block text-sm">
+                      Receive important workspace updates by email.
+                    </span>
+                  </span>
                   <input
                     checked={preferences.emailNotifications}
                     className="h-4 w-4"
                     onChange={(event) => handlePreferenceChange("emailNotifications", event.target.checked)}
                     type="checkbox"
                   />
-                  <span className="text-sm font-medium text-[var(--foreground)]">
-                    Enable email notifications
-                  </span>
                 </label>
 
                 <div className="border-t border-[var(--app-border)] pt-4">
                   <ThemePicker
                     onChange={(theme) => handlePreferenceChange("theme", theme)}
+                    onScopeChange={(scope) => handlePreferenceChange("themeScope", scope)}
+                    scope={preferences.themeScope}
                     value={preferences.theme}
                   />
                 </div>
@@ -197,9 +238,40 @@ function readStoredPreferences(): SetupPreferences {
   }
 
   const stored = window.localStorage.getItem("nafasi_preferences");
-  return stored ? { ...defaultPreferences(), ...JSON.parse(stored) } : defaultPreferences();
+  const base = stored ? { ...defaultPreferences(), ...JSON.parse(stored) } : defaultPreferences();
+  return {
+    ...base,
+    theme: readSelectedTheme(base.theme),
+  };
 }
 
 function defaultPreferences(): SetupPreferences {
-  return { emailNotifications: true, language: "en", theme: defaultThemeKey };
+  return { emailNotifications: true, language: "en", theme: defaultThemeKey, themeScope: "system" };
+}
+
+function saveTheme(theme: ThemeKey, scope: ThemeScope, user: AuthUser | null) {
+  const accountKey = accountThemeStorageKey(accountIdForUser(user));
+
+  if (scope === "system") {
+    window.localStorage.setItem(globalThemeStorageKey, theme);
+    if (accountKey) {
+      window.localStorage.removeItem(accountKey);
+    }
+  } else if (accountKey) {
+    window.localStorage.setItem(accountKey, theme);
+  }
+
+  applyTheme(theme);
+  window.dispatchEvent(new Event(themeStorageEvent));
+}
+
+function readSelectedTheme(fallback: ThemeKey) {
+  const accountKey = accountThemeStorageKey(accountIdForUser(readStoredUser()));
+  const accountTheme = accountKey ? window.localStorage.getItem(accountKey) : null;
+  const globalTheme = window.localStorage.getItem(globalThemeStorageKey);
+  return getThemeByKey(accountTheme ?? globalTheme ?? fallback).key;
+}
+
+function accountIdForUser(user: AuthUser | null) {
+  return user?.email ?? user?.name ?? null;
 }

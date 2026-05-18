@@ -1,4 +1,5 @@
-export type ThemeKey = "sage" | "midnight" | "sunrise" | "coastal";
+export type ThemeKey = "sage" | "blue" | "sunrise" | "coastal";
+export type ThemeScope = "system" | "account";
 
 export type AppTheme = {
   accent: string;
@@ -12,6 +13,7 @@ export type AppTheme = {
 };
 
 export const themeStorageEvent = "nafasi-theme-updated";
+export const globalThemeStorageKey = "nafasi_theme_global";
 
 export const appThemes: AppTheme[] = [
   {
@@ -25,14 +27,14 @@ export const appThemes: AppTheme[] = [
     accent: "#1d3d35",
   },
   {
-    key: "midnight",
-    name: "Midnight",
-    background: "#101816",
-    foreground: "#eff5ef",
-    surface: "#17221f",
-    muted: "#b4c3ba",
-    border: "#2f4039",
-    accent: "#8bd8bd",
+    key: "blue",
+    name: "Blue",
+    background: "#f4f8ff",
+    foreground: "#172033",
+    surface: "#ffffff",
+    muted: "#53627a",
+    border: "#cdd9ee",
+    accent: "#2563eb",
   },
   {
     key: "sunrise",
@@ -60,4 +62,8 @@ export const defaultThemeKey: ThemeKey = "sage";
 
 export function getThemeByKey(key?: string | null) {
   return appThemes.find((theme) => theme.key === key) ?? appThemes[0];
+}
+
+export function accountThemeStorageKey(accountId?: string | null) {
+  return accountId ? `nafasi_theme_account_${accountId}` : null;
 }
