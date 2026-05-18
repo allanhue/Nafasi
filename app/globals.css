@@ -3,6 +3,10 @@
 :root {
   --background: #f5f6f1;
   --foreground: #20231f;
+  --app-surface: #fbfcf8;
+  --app-muted: #5d665d;
+  --app-border: #d8ddd0;
+  --app-accent: #1d3d35;
   --sidebar-width: 16rem; /* 256px - w-64 */
 }
 
@@ -22,7 +26,7 @@ body {
 button,
 a,
 input {
-  outline-color: #1d3d35;
+  outline-color: var(--app-accent);
 }
 
 .nafasi-sidebar-offset {
@@ -45,9 +49,33 @@ input {
 }
 
 .form-input:focus {
-  border-color: #1d3d35;
-  outline: 2px solid rgb(29 61 53 / 0.18);
+  border-color: var(--app-accent);
+  outline: 2px solid color-mix(in srgb, var(--app-accent) 18%, transparent);
   outline-offset: 0;
+}
+
+.theme-bg {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.theme-surface {
+  background: var(--app-surface);
+  border-color: var(--app-border);
+  color: var(--foreground);
+}
+
+.theme-muted {
+  color: var(--app-muted);
+}
+
+.theme-accent {
+  background: var(--app-accent);
+  color: #ffffff;
+}
+
+.theme-accent-text {
+  color: var(--app-accent);
 }
 
 @media (min-width: 1024px) {

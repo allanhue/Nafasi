@@ -4,27 +4,29 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import Navbar from "@/app/components/navbar";
 import Sidebar from "@/app/components/sidebar";
-import {
-  clearSession,
-  getStoredToken,
-  roleLabels,
-  type AuthUser,
-} from "@/app/lib/auth";
+import { applyTheme } from "@/app/components/theme_provider";
+import ThemePicker from "@/app/components/theme_picker";
+import { clearSession, roleLabels, type AuthUser } from "@/app/lib/auth";
 import { defaultFeature } from "@/app/lib/features";
+import { defaultThemeKey, themeStorageEvent, type ThemeKey } from "@/app/lib/themes";
+
+type SetupPreferences = {
+  emailNotifications: boolean;
+  language: string;
+  theme: ThemeKey;
+};
 
 export default function UserSetup() {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [preferences, setPreferences] = useState<{
-    emailNotifications: boolean;
-    language: string;
-  }>({
-    emailNotifications: true,
-    language: "en",
-  });
+  const [preferences, setPreferences] = useState<SetupPreferences>(defaultPreferences());
 
   useEffect(() => {
-    setUser(readStoredUser());
-    setPreferences(readStoredPreferences());
+    const id = window.setTimeout(() => {
+      setUser(readStoredUser());
+      setPreferences(readStoredPreferences());
+    }, 0);
+
+    return () => window.clearTimeout(id);
   }, []);
 
   function handleSignOut() {
@@ -32,42 +34,47 @@ export default function UserSetup() {
     window.location.href = "/home";
   }
 
-  function handlePreferenceChange(key: string, value: unknown) {
+  function handlePreferenceChange<K extends keyof SetupPreferences>(
+    key: K,
+    value: SetupPreferences[K]
+  ) {
     const updated = { ...preferences, [key]: value };
     setPreferences(updated);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("nafasi_preferences", JSON.stringify(updated));
+    window.localStorage.setItem("nafasi_preferences", JSON.stringify(updated));
+
+    if (key === "theme") {
+      applyTheme(value as ThemeKey);
+      window.dispatchEvent(new Event(themeStorageEvent));
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f6f1] text-[#20231f]">
+    <div className="theme-bg min-h-screen">
       <Sidebar activeFeature={defaultFeature} />
       <Navbar activeFeature={defaultFeature} />
       <main className="nafasi-sidebar-offset px-4 py-5 transition-all duration-300 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl">
-          <section className="mb-6 rounded-lg border border-[#d8ddd0] bg-[#fbfcf8] p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#788178]">
+          <section className="theme-surface mb-6 rounded-lg border p-6 shadow-sm">
+            <p className="theme-muted text-xs font-semibold uppercase tracking-[0.18em]">
               Account
             </p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight">Your setup</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5d665d]">
+            <p className="theme-muted mt-3 max-w-2xl text-sm leading-6">
               Configure your account preferences and basic settings.
             </p>
           </section>
 
           <div className="grid gap-6">
-            {/* Profile Card */}
-            <section className="rounded-lg border border-[#e1e5db] bg-white p-6">
+            <section className="theme-surface rounded-lg border p-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="grid h-16 w-16 place-items-center rounded-full bg-[#1d3d35] text-2xl font-semibold text-white">
+                  <div className="theme-accent grid h-16 w-16 place-items-center rounded-full text-2xl font-semibold">
                     {user?.name?.charAt(0).toUpperCase() ?? "U"}
                   </div>
                   <div>
                     <h2 className="text-xl font-semibold">{user?.name ?? "Nafasi user"}</h2>
-                    <p className="text-sm text-[#5d665d]">{user?.email ?? "No email"}</p>
-                    <span className="mt-1 inline-flex rounded-md bg-[#eef5df] px-3 py-1 text-xs font-semibold text-[#1d3d35]">
+                    <p className="theme-muted text-sm">{user?.email ?? "No email"}</p>
+                    <span className="theme-accent mt-1 inline-flex rounded-md px-3 py-1 text-xs font-semibold">
                       {user ? roleLabels[user.role] : "User"}
                     </span>
                   </div>
@@ -82,37 +89,44 @@ export default function UserSetup() {
               </div>
             </section>
 
-            {/* Quick Stats */}
             <section className="grid gap-4 md:grid-cols-3">
               <StatCard label="Account type" value={user ? roleLabels[user.role] : "User"} />
               <StatCard label="Status" value="Active" />
               <StatCard label="Workspace" value="Default" />
             </section>
 
-            {/* Preferences */}
-            <section className="rounded-lg border border-[#e1e5db] bg-white p-6">
+            <section className="theme-surface rounded-lg border p-6">
               <h2 className="text-lg font-semibold">Preferences</h2>
               <div className="mt-5 space-y-4">
                 <label className="flex items-center gap-3">
                   <input
                     checked={preferences.emailNotifications}
-                    onChange={(e) => handlePreferenceChange("emailNotifications", e.target.checked)}
-                    type="checkbox"
                     className="h-4 w-4"
+                    onChange={(event) => handlePreferenceChange("emailNotifications", event.target.checked)}
+                    type="checkbox"
                   />
-                  <span className="text-sm font-medium text-[#354039]">
+                  <span className="text-sm font-medium text-[var(--foreground)]">
                     Enable email notifications
                   </span>
                 </label>
 
-                <div className="border-t border-[#e1e5db] pt-4">
+                <div className="border-t border-[var(--app-border)] pt-4">
+                  <ThemePicker
+                    onChange={(theme) => handlePreferenceChange("theme", theme)}
+                    value={preferences.theme}
+                  />
+                </div>
+
+                <div className="border-t border-[var(--app-border)] pt-4">
                   <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-[#354039]">Language</span>
+                    <span className="mb-2 block text-sm font-semibold text-[var(--foreground)]">
+                      Language
+                    </span>
                     <select
-                      className="form-input"
-                      onChange={(e) => handlePreferenceChange("language", e.target.value)}
-                      value={preferences.language}
                       aria-label="Select language"
+                      className="form-input"
+                      onChange={(event) => handlePreferenceChange("language", event.target.value)}
+                      value={preferences.language}
                     >
                       <option value="en">English</option>
                       <option value="sw">Swahili</option>
@@ -122,18 +136,17 @@ export default function UserSetup() {
               </div>
             </section>
 
-            {/* Quick Actions */}
-            <section className="rounded-lg border border-[#e1e5db] bg-white p-6">
+            <section className="theme-surface rounded-lg border p-6">
               <h2 className="text-lg font-semibold">Quick actions</h2>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <Link
-                  className="rounded-md bg-[#1d3d35] px-4 py-3 text-center text-sm font-semibold text-white hover:bg-[#0f2419]"
+                  className="theme-accent rounded-md px-4 py-3 text-center text-sm font-semibold"
                   href="/dashboard"
                 >
                   Go to dashboard
                 </Link>
                 <Link
-                  className="rounded-md border border-[#b9c3b2] bg-white px-4 py-3 text-center text-sm font-semibold text-[#1d3d35] hover:bg-[#f3f4f0]"
+                  className="rounded-md border border-[var(--app-border)] bg-white px-4 py-3 text-center text-sm font-semibold theme-accent-text hover:bg-[#f3f4f0]"
                   href="/help"
                 >
                   Get help
@@ -141,17 +154,16 @@ export default function UserSetup() {
               </div>
             </section>
 
-            {/* Support */}
-            <section className="rounded-lg border border-[#d8ddd0] bg-[#eef5df] p-6">
-              <h3 className="font-semibold text-[#1d3d35]">Need help?</h3>
-              <p className="mt-2 text-sm text-[#5d665d]">
+            <section className="theme-surface rounded-lg border p-6">
+              <h3 className="font-semibold theme-accent-text">Need help?</h3>
+              <p className="theme-muted mt-2 text-sm">
                 Check our documentation or contact support if you have questions about your account or features.
               </p>
               <Link
+                className="mt-3 inline-block text-sm font-semibold theme-accent-text hover:underline"
                 href="/help"
-                className="mt-3 inline-block text-sm font-semibold text-[#1d3d35] hover:underline"
               >
-                Contact support →
+                Contact support
               </Link>
             </section>
           </div>
@@ -163,9 +175,9 @@ export default function UserSetup() {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <article className="rounded-lg border border-[#e1e5db] bg-white p-4">
-      <p className="text-xs font-semibold uppercase tracking-widest text-[#788178]">{label}</p>
-      <p className="mt-2 text-lg font-semibold text-[#1d3d35]">{value}</p>
+    <article className="theme-surface rounded-lg border p-4">
+      <p className="theme-muted text-xs font-semibold uppercase tracking-widest">{label}</p>
+      <p className="mt-2 text-lg font-semibold theme-accent-text">{value}</p>
     </article>
   );
 }
@@ -179,13 +191,15 @@ function readStoredUser() {
   return storedUser ? (JSON.parse(storedUser) as AuthUser) : null;
 }
 
-function readStoredPreferences() {
+function readStoredPreferences(): SetupPreferences {
   if (typeof window === "undefined") {
-    return { emailNotifications: true, language: "en" };
+    return defaultPreferences();
   }
 
   const stored = window.localStorage.getItem("nafasi_preferences");
-  return stored
-    ? JSON.parse(stored)
-    : { emailNotifications: true, language: "en" };
+  return stored ? { ...defaultPreferences(), ...JSON.parse(stored) } : defaultPreferences();
+}
+
+function defaultPreferences(): SetupPreferences {
+  return { emailNotifications: true, language: "en", theme: defaultThemeKey };
 }
