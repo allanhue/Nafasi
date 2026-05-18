@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import ApplicationSubmissionForm from "@/app/components/application_submission_form";
 import Navbar from "@/app/components/navbar";
 import Sidebar from "@/app/components/sidebar";
+import WorkspaceQueue, { type WorkspaceQueueItem } from "@/app/components/workspace_queue";
 import { features, getFeatureSections, type FeatureKey } from "@/app/lib/features";
 
 type ModuleWorkspaceProps = {
@@ -91,34 +92,7 @@ function ModuleOperationsPanel({
 }) {
   const rows = getModuleRows(featureKey, moduleSlug);
 
-  return (
-    <div className="rounded-lg border border-[#e1e5db] bg-white p-4 sm:p-5">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-[#20231f]">Workspace queue</h2>
-        <span className="rounded-md bg-[#edf1e7] px-3 py-1 text-xs font-semibold text-[#4b554d]">
-          Live
-        </span>
-      </div>
-      <div className="mt-5 grid gap-3">
-        {rows.map((row) => (
-          <article
-            className="rounded-md border border-[#e1e5db] bg-[#f8faf5] p-3"
-            key={row.title}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h3 className="text-sm font-semibold text-[#20231f]">{row.title}</h3>
-                <p className="mt-1 text-sm leading-6 text-[#5d665d]">{row.detail}</p>
-              </div>
-              <span className="shrink-0 rounded-md border border-[#d8ddd0] bg-white px-2 py-1 text-xs font-semibold text-[#4b554d]">
-                {row.status}
-              </span>
-            </div>
-          </article>
-        ))}
-      </div>
-    </div>
-  );
+  return <WorkspaceQueue featureKey={featureKey} moduleSlug={moduleSlug} rows={rows} />;
 }
 
 function ReportsPanel({ featureKey }: { featureKey: FeatureKey }) {
@@ -161,7 +135,7 @@ function ReportsPanel({ featureKey }: { featureKey: FeatureKey }) {
 }
 
 function getModuleRows(featureKey: FeatureKey, moduleSlug: string) {
-  const rows: Record<string, Array<{ title: string; detail: string; status: string }>> = {
+  const rows: Record<string, WorkspaceQueueItem[]> = {
     "rentals:property-listings": [
       { title: "Westlands apartment", detail: "2 bedroom unit, parking, ready for viewing.", status: "Listed" },
       { title: "Kilimani studio", detail: "Budget lead wants a weekday viewing window.", status: "Lead" },

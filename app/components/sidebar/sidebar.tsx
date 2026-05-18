@@ -33,8 +33,12 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
   const settingsPath = isAdmin ? "/settings" : "/setup";
 
   useEffect(() => {
-    setUser(readStoredUser());
-    setWorkspaceImage(readWorkspaceImage(activeFeature.key));
+    const id = window.setTimeout(() => {
+      setUser(readStoredUser());
+      setWorkspaceImage(readWorkspaceImage());
+    }, 0);
+
+    return () => window.clearTimeout(id);
   }, [activeFeature.key]);
 
   useEffect(() => {
@@ -60,7 +64,7 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
       const value = typeof reader.result === "string" ? reader.result : null;
       setWorkspaceImage(value);
       if (value) {
-        window.localStorage.setItem(workspaceImageKey(activeFeature.key), value);
+        window.localStorage.setItem(workspaceImageKey(), value);
       }
     };
     reader.readAsDataURL(file);
@@ -68,7 +72,7 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
 
   function removeWorkspaceImage() {
     setWorkspaceImage(null);
-    window.localStorage.removeItem(workspaceImageKey(activeFeature.key));
+    window.localStorage.removeItem(workspaceImageKey());
   }
 
   return (
@@ -151,6 +155,23 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
           </nav>
 
           <div className={`mt-auto border-t border-[#e3e6dc] pt-4 px-2 transition-all duration-300`}>
+            <Link
+              className={`mb-3 flex items-center gap-3 rounded-md px-3 py-2 text-[#1d3d35] transition-colors hover:bg-[#edf1e7] ${
+                isCollapsed ? "justify-center" : ""
+              }`}
+              href="/dashboard"
+              title="Nafasi"
+            >
+              <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#1d3d35] text-sm font-bold text-white">
+                N
+              </span>
+              {!isCollapsed && (
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold leading-5">Nafasi</span>
+                  <span className="block truncate text-xs text-[#677067]">Shared workspace</span>
+                </span>
+              )}
+            </Link>
             {!isCollapsed && (
               <Link
                 className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-[#4b554d] hover:bg-[#edf1e7] transition-colors mb-3"
@@ -217,6 +238,9 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center lg:ml-0">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mx-4">
             <h2 className="text-xl font-semibold mb-4">Workspace picture</h2>
+            <p className="mb-4 text-sm leading-6 text-[#677067]">
+              This picture is shared across Rentals, Warehouses, and Event Spaces for every account on this device.
+            </p>
             <div className="mb-4 flex justify-center">
               <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-lg bg-[#1d3d35] text-3xl font-bold text-white">
                 {workspaceImage ? (
@@ -269,16 +293,16 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
   );
 }
 
-function workspaceImageKey(featureKey: string) {
-  return `nafasi_workspace_image_${featureKey}`;
+function workspaceImageKey() {
+  return "nafasi_workspace_image";
 }
 
-function readWorkspaceImage(featureKey: string) {
+function readWorkspaceImage() {
   if (typeof window === "undefined") {
     return null;
   }
 
-  return window.localStorage.getItem(workspaceImageKey(featureKey));
+  return window.localStorage.getItem(workspaceImageKey());
 }
 
 function readStoredUser() {

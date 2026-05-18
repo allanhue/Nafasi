@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState, type ReactNode } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState, type ReactNode } from "react";
 import LoadingOverlay, { ButtonSpinner } from "@/app/components/loading_overlay";
+import { saveWorkspaceQueueItem } from "@/app/components/workspace_queue";
 import { API_BASE_URL, getStoredToken, type AuthUser } from "@/app/lib/auth";
 import type { Feature, FeatureSection } from "@/app/lib/features";
 
@@ -177,15 +178,20 @@ export default function ApplicationSubmissionForm({
   const [email, setEmail] = useState("");
 
   useEffect(() => {
-    const user = readStoredUser();
-    if (user) {
-      setName(user.name ?? "");
-      setEmail(user.email ?? "");
-    }
+    const id = window.setTimeout(() => {
+      const user = readStoredUser();
+      if (user) {
+        setName(user.name ?? "");
+        setEmail(user.email ?? "");
+      }
+    }, 0);
+
+    return () => window.clearTimeout(id);
   }, []);
   const [phone, setPhone] = useState("");
   const [summary, setSummary] = useState("");
   const [details, setDetails] = useState("");
+  const [photos, setPhotos] = useState<string[]>([]);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -234,8 +240,26 @@ export default function ApplicationSubmissionForm({
         throw new Error(payload.error ?? "Could not submit request");
       }
 
+      saveWorkspaceQueueItem({
+        accountName: name || email || "Shared account",
+        detail: details,
+        featureKey: feature.key,
+        fields: {
+          Email: email,
+          Phone: phone,
+          Reference: reference,
+          Section: section.title,
+          ...labelsForValues(config.fields, fieldValues),
+        },
+        image: photos[0] ?? null,
+        images: photos,
+        moduleSlug: section.slug,
+        status: "Submitted",
+        title: summary,
+      });
       setSummary("");
       setDetails("");
+      setPhotos([]);
       setFieldValues({});
       setMessage("Submission saved. Nafasi will follow up with the next step.");
     } catch (err) {
@@ -312,6 +336,60 @@ export default function ApplicationSubmissionForm({
           />
         </FormField>
 
+        <FormField label="Photos">
+          <div className="grid gap-3 rounded-md border border-dashed border-[#cfd8c8] bg-[#f8faf5] p-3">
+            {photos.length > 0 ? (
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                {photos.map((photo, index) => (
+                  <div
+                    className="relative h-20 overflow-hidden rounded-md border border-[#d8ddd0] bg-[#edf1e7]"
+                    key={`${photo.slice(0, 24)}-${index}`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="block h-full w-full bg-cover bg-center"
+                      style={{ backgroundImage: `url(${photo})` }}
+                    />
+                    <button
+                      aria-label={`Remove photo ${index + 1}`}
+                      className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-md bg-white/95 text-[#9b1c1c] shadow-sm"
+                      onClick={() => setPhotos((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                      type="button"
+                    >
+                      <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M18 6 6 18" strokeLinecap="round" />
+                        <path d="m6 6 12 12" strokeLinecap="round" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid h-20 place-items-center rounded-md bg-[#edf1e7] text-sm font-semibold text-[#1d3d35]">
+                Photos
+              </div>
+            )}
+            <div className="min-w-0">
+              <input
+                accept="image/*"
+                className="w-full rounded-md border border-[#d8ddd0] bg-white px-3 py-2 text-sm text-[#1d3d35] file:mr-3 file:rounded-md file:border-0 file:bg-[#edf1e7] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-[#1d3d35]"
+                onChange={handlePhotoChange}
+                multiple
+                type="file"
+              />
+              {photos.length > 0 ? (
+                <button
+                  className="mt-2 text-sm font-semibold text-[#9b1c1c]"
+                  onClick={() => setPhotos([])}
+                  type="button"
+                >
+                  Remove all photos
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </FormField>
+
         {message ? <StatusMessage tone="success" value={message} /> : null}
         {error ? <StatusMessage tone="error" value={error} /> : null}
 
@@ -327,6 +405,26 @@ export default function ApplicationSubmissionForm({
       </form>
     </section>
   );
+
+  async function handlePhotoChange(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    if (files.length === 0) {
+      return;
+    }
+
+    const nextPhotos = await Promise.all(files.map(readPhotoFile));
+    setPhotos((current) => [...current, ...nextPhotos.filter(Boolean)].slice(0, 8));
+    event.target.value = "";
+  }
+}
+
+function readPhotoFile(file: File) {
+  return new Promise<string>((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.onerror = () => resolve("");
+    reader.readAsDataURL(file);
+  });
 }
 
 function DynamicInput({
@@ -384,6 +482,13 @@ function formConfigFor(feature: Feature, section: FeatureSection): FormConfig {
     ...override,
     fields: override.fields ?? base.fields,
   };
+}
+
+function labelsForValues(fields: DynamicField[], values: Record<string, string>) {
+  return fields.reduce<Record<string, string>>((result, field) => {
+    result[field.label] = values[field.key] ?? "";
+    return result;
+  }, {});
 }
 
 function readStoredUser() {

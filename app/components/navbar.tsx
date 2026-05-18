@@ -18,23 +18,15 @@ export default function Navbar({ activeFeature }: NavbarProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
-    setUser(readStoredUser());
+    const id = window.setTimeout(() => setUser(readStoredUser()), 0);
+
+    return () => window.clearTimeout(id);
   }, []);
 
   return (
     <>
       <header className="nafasi-sidebar-offset sticky top-0 z-30 border-b border-[#d8ddd0] bg-[#fbfcf8]/95 backdrop-blur transition-all duration-300">
         <div className="flex min-h-16 w-full items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
-          <Link href="/dashboard" className="flex shrink-0 items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#1d3d35] text-sm font-bold text-white">
-              N
-            </span>
-            <span className="hidden sm:block">
-              <span className="block text-base font-semibold leading-5">Nafasi</span>
-              <span className="block text-xs text-[#677067]">{activeFeature.label} workspace</span>
-            </span>
-          </Link>
-
           <label className="relative hidden min-w-0 flex-1 md:block">
             <span className="sr-only">Search Nafasi</span>
             <svg
