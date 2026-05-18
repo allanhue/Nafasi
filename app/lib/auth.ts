@@ -14,8 +14,14 @@ export type AuthResponse = {
   user: AuthUser;
 };
 
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "https://nafasi-s0ph.onrender.com") ?? "http://localhost:8080";
+const rawUrl = process.env.NEXT_PUBLIC_API_URL || 
+  (process.env.NODE_ENV === "production"   
+    ? "https://nafasi-s0ph.onrender.com" 
+    : "http://localhost:8080");
+
+// This safely strips the trailing slash if one exists
+export const API_BASE_URL = rawUrl.replace(/\/$/, "");
+
 
 export const roleLabels: Record<UserRole, string> = {
   system_admin: "System admin",
