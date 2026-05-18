@@ -15,7 +15,7 @@ export type AuthResponse = {
 };
 
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:8080";
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "https://nafasi-s0ph.onrender.com") ?? "http://localhost:8080";
 
 export const roleLabels: Record<UserRole, string> = {
   system_admin: "System admin",
