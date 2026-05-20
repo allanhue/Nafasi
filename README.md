@@ -1,6 +1,6 @@
 # nafasi
 > One platform. Three services. Built for Kenyan SMEs.
-
+ url= https://nafasi.vercel.app/home
 
 **Nafasi**  is a multi-tenant SaaS platform that unifies rental property management, inventory tracking and space booking under a single identity.
 

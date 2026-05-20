@@ -58,7 +58,7 @@ export default function ProfileWorkspace() {
             </p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight">System settings</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5d665d]">
-              Manage your account, workspace access, roles, and operational settings.
+              Manage your account, workspace access, roles and operational settings.
             </p>
           </section>
 
