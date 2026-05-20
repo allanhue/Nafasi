@@ -211,14 +211,17 @@ export function getIconForSection(slug: string): React.ReactNode {
     case "property-listings":
       return <PropertyListingsIcon />;
     case "warehouse-listings":
+      return <WarehouseListingsIcon />;
     case "space-listings":
       return <ListingIcon />;
     case "viewing-requests":
       return <ViewingRequestIcon />;
     case "storage-requests":
+      return <StorageRequestsIcon />;
     case "space-requests":
-    case "logistics-support":
       return <RequestsIcon />;
+    case "logistics-support":
+      return <LogisticsSupportIcon />;
     case "applications":
       return <RentalApplicationIcon />;
     case "leases":
