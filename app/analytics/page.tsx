@@ -22,6 +22,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import * as XLSX from "xlsx";
 
 type AnalyticsData = {
   totalUsers: number;
@@ -75,6 +76,7 @@ export default function AnalyticsPage() {
   const [error, setError] = useState("");
   const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d">("30d");
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     setUser(readStoredUser());
@@ -132,6 +134,124 @@ export default function AnalyticsPage() {
       setAnalytics(generateMockAnalytics());
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function exportToExcel() {
+    if (!user || !analytics) {
+      setError("You must be logged in to export analytics.");
+      return;
+    }
+
+    setExporting(true);
+    try {
+      const workbook = XLSX.utils.book_new();
+
+      // Sheet 1: Summary
+      const summaryData = [
+        ["Analytics Summary Report"],
+        ["Exported on", new Date().toLocaleString()],
+        ["User", user.name || user.email || "User"],
+        [],
+        ["Key Metrics", ""],
+        ["Total Users", analytics.totalUsers],
+        ["Active Sessions", analytics.activeSessions],
+        ["Total Transactions", analytics.totalTransactions],
+        ["System Uptime", analytics.systemUptime],
+        ["Average Transaction Value", analytics.averageTransactionValue],
+        ["Conversion Rate", `${analytics.conversionRate.toFixed(2)}%`],
+        ["User Growth", `${analytics.userGrowth.toFixed(2)}%`],
+        ["Transaction Growth", `${analytics.transactionGrowth.toFixed(2)}%`],
+        ["Revenue Growth", `${analytics.revenueGrowth.toFixed(2)}%`],
+      ];
+      const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
+
+      // Sheet 2: Daily Metrics
+      const dailyMetricsData = [
+        ["Date", "Users", "Transactions", "Revenue"],
+        ...analytics.dailyMetrics.map((metric) => [
+          new Date(metric.date).toLocaleDateString(),
+          metric.users,
+          metric.transactions,
+          metric.revenue,
+        ]),
+      ];
+      const dailySheet = XLSX.utils.aoa_to_sheet(dailyMetricsData);
+      XLSX.utils.book_append_sheet(workbook, dailySheet, "Daily Metrics");
+
+      // Sheet 3: Feature Usage
+      const featureUsageData = [
+        ["Feature", "Count", "Percentage"],
+        ...analytics.featureUsage.map((feature) => [
+          feature.name,
+          feature.count,
+          `${feature.percentage}%`,
+        ]),
+      ];
+      const featureSheet = XLSX.utils.aoa_to_sheet(featureUsageData);
+      XLSX.utils.book_append_sheet(workbook, featureSheet, "Feature Usage");
+
+      // Sheet 4: User Segmentation
+      const userSegmentationData = [
+        ["Segment", "Count", "Percentage"],
+        ...analytics.userSegmentation.map((segment) => [
+          segment.segment,
+          segment.count,
+          `${segment.percentage}%`,
+        ]),
+      ];
+      const segmentSheet = XLSX.utils.aoa_to_sheet(userSegmentationData);
+      XLSX.utils.book_append_sheet(workbook, segmentSheet, "User Segmentation");
+
+      // Sheet 5: Notification Stats
+      const notificationData = [
+        ["Type", "Count"],
+        ...analytics.notificationStats.byType.map((notif) => [
+          notif.type,
+          notif.count,
+        ]),
+        [],
+        ["Total", analytics.notificationStats.total],
+      ];
+      const notificationSheet = XLSX.utils.aoa_to_sheet(notificationData);
+      XLSX.utils.book_append_sheet(workbook, notificationSheet, "Notifications");
+
+      // Sheet 6: Top Actions
+      const actionsData = [
+        ["Action", "Count"],
+        ...analytics.auditStats.topActions.map((action) => [
+          action.action,
+          action.count,
+        ]),
+        [],
+        ["Total", analytics.auditStats.total],
+      ];
+      const actionsSheet = XLSX.utils.aoa_to_sheet(actionsData);
+      XLSX.utils.book_append_sheet(workbook, actionsSheet, "Top Actions");
+
+      // Sheet 7: Recent Activity
+      const activityData = [
+        ["Action", "User", "Timestamp", "Status"],
+        ...analytics.recentActivity.map((activity) => [
+          activity.action,
+          activity.user,
+          new Date(activity.timestamp).toLocaleString(),
+          activity.status,
+        ]),
+      ];
+      const activitySheet = XLSX.utils.aoa_to_sheet(activityData);
+      XLSX.utils.book_append_sheet(workbook, activitySheet, "Recent Activity");
+
+      // Generate file name with current date and time
+      const fileName = `Analytics_Report_${new Date().toISOString().slice(0, 10)}_${new Date().getTime()}.xlsx`;
+
+      // Write file
+      XLSX.writeFile(workbook, fileName);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to export analytics");
+    } finally {
+      setExporting(false);
     }
   }
 
@@ -197,6 +317,15 @@ export default function AnalyticsPage() {
                   >
                     Refresh Now
                   </button>
+                  {user && (
+                    <button
+                      onClick={exportToExcel}
+                      disabled={exporting || !analytics}
+                      className="rounded-md border border-[#1d3d35] bg-[#1d3d35] px-3 py-2 text-xs font-semibold text-white hover:bg-[#2d5d4d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {exporting ? "📥 Exporting..." : "📥 Export to Excel"}
+                    </button>
+                  )}
                 </div>
               </div>
 
