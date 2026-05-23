@@ -3,7 +3,7 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState, type ReactNode } from "react";
 import LoadingOverlay, { ButtonSpinner } from "@/app/components/loading_overlay";
 import { saveWorkspaceQueueItem } from "@/app/components/workspace_queue";
-import { API_BASE_URL, getStoredToken, type AuthUser } from "@/app/lib/auth";
+import { API_BASE_URL, getStoredToken, type AuthUser, readStoredUser } from "@/app/lib/auth";
 import type { Feature, FeatureSection } from "@/app/lib/features";
 
 type ApplicationSubmissionFormProps = {
@@ -489,13 +489,4 @@ function labelsForValues(fields: DynamicField[], values: Record<string, string>)
     result[field.label] = values[field.key] ?? "";
     return result;
   }, {});
-}
-
-function readStoredUser() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const storedUser = window.localStorage.getItem("nafasi_user");
-  return storedUser ? (JSON.parse(storedUser) as AuthUser) : null;
 }

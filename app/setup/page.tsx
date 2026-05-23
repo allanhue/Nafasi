@@ -7,7 +7,7 @@ import Navbar from "@/app/components/navbar";
 import Sidebar from "@/app/components/sidebar";
 import { applyTheme } from "@/app/components/theme_provider";
 import ThemePicker from "@/app/components/theme_picker";
-import { clearSession, roleLabels, type AuthUser } from "@/app/lib/auth";
+import { clearSession, roleLabels, type AuthUser, readStoredUser } from "@/app/lib/auth";
 import { defaultFeature } from "@/app/lib/features";
 import {
   accountThemeStorageKey,
@@ -221,15 +221,6 @@ function StatCard({ label, value }: { label: string; value: string }) {
       <p className="mt-2 text-lg font-semibold theme-accent-text">{value}</p>
     </article>
   );
-}
-
-function readStoredUser() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const storedUser = window.localStorage.getItem("nafasi_user");
-  return storedUser ? (JSON.parse(storedUser) as AuthUser) : null;
 }
 
 function readStoredPreferences(): SetupPreferences {

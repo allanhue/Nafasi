@@ -11,6 +11,7 @@ import {
   roleLabels,
   signUpRoles,
   type AuthUser,
+  readStoredUser,
 } from "@/app/lib/auth";
 import { defaultFeature, type UserRole } from "@/app/lib/features";
 
@@ -487,11 +488,3 @@ function formatAccountDate(value: string) {
   });
 }
 
-function readStoredUser() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const storedUser = window.localStorage.getItem("nafasi_user");
-  return storedUser ? (JSON.parse(storedUser) as AuthUser) : null;
-}

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChangeEvent, useEffect, useState } from "react";
-import { clearSession } from "@/app/lib/auth";
+import { clearSession, readStoredUser } from "@/app/lib/auth";
 import type { AuthUser } from "@/app/lib/auth";
 import { getFeatureSections, type Feature } from "@/app/lib/features";
 import { useSidebar } from "./sidebar_context";
@@ -303,13 +303,4 @@ function readWorkspaceImage() {
   }
 
   return window.localStorage.getItem(workspaceImageKey());
-}
-
-function readStoredUser() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const storedUser = window.localStorage.getItem("nafasi_user");
-  return storedUser ? (JSON.parse(storedUser) as AuthUser) : null;
 }

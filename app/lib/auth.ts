@@ -68,3 +68,22 @@ export function getStoredToken() {
 
   return window.localStorage.getItem("nafasi_token");
 }
+
+export function readStoredUser(): AuthUser | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const storedUser = window.localStorage.getItem("nafasi_user");
+    // Handle cases where stored value is null, "null", or "undefined"
+    if (!storedUser || storedUser === "null" || storedUser === "undefined") {
+      return null;
+    }
+    return JSON.parse(storedUser) as AuthUser;
+  } catch {
+    // If parsing fails, clear the invalid data and return null
+    window.localStorage.removeItem("nafasi_user");
+    return null;
+  }
+}

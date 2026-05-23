@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import LoadingOverlay from "@/app/components/loading_overlay";
 import Notifications from "@/app/components/notifications";
-import { API_BASE_URL, type AuthUser } from "@/app/lib/auth";
+import { API_BASE_URL, type AuthUser, readStoredUser } from "@/app/lib/auth";
 import { features, type Feature } from "@/app/lib/features";
 
 type NavbarProps = {
@@ -228,11 +228,3 @@ function RightDrawer({
   );
 }
 
-function readStoredUser() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const storedUser = window.localStorage.getItem("nafasi_user");
-  return storedUser ? (JSON.parse(storedUser) as AuthUser) : null;
-}

@@ -7,6 +7,7 @@ import {
   API_BASE_URL,
   getStoredToken,
   type AuthUser,
+  readStoredUser,
 } from "@/app/lib/auth";
 import { defaultFeature } from "@/app/lib/features";
 import {
@@ -642,15 +643,6 @@ function formatActivityTime(timestamp: string): string {
   if (diffDays < 7) return `${diffDays}d ago`;
 
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
-
-function readStoredUser() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const storedUser = window.localStorage.getItem("nafasi_user");
-  return storedUser ? (JSON.parse(storedUser) as AuthUser) : null;
 }
 
 function generateAnalyticsFromData(
