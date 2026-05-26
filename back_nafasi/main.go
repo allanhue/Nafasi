@@ -43,10 +43,11 @@ func main() {
 	log.Print("owner seed checked")
 
 	operationsHandler := routes.NewOperationsHandler(db)
+	mailer := routes.NewMailerFromEnv()
 	authHandler := routes.NewAuthHandler(db, operationsHandler)
 	featureHandler := routes.NewFeatureHandler(db, operationsHandler)
 	reportHandler := routes.NewReportHandler(db)
-	mailer := routes.NewMailerFromEnv()
+	calendarHandler := routes.NewCalendarHandler(db, operationsHandler, mailer)
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
@@ -64,6 +65,11 @@ func main() {
 	mux.Handle("GET /notifications", authHandler.RequireRole(http.HandlerFunc(operationsHandler.ListNotifications), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("POST /notifications/read-all", authHandler.RequireRole(http.HandlerFunc(operationsHandler.MarkAllNotificationsRead), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("POST /notifications/{id}/read", authHandler.RequireRole(http.HandlerFunc(operationsHandler.MarkNotificationRead), "system_admin", "admin", "provider", "customer"))
+	mux.Handle("GET /api/calendar", authHandler.RequireRole(http.HandlerFunc(calendarHandler.ListCalendarItems), "system_admin", "admin", "provider", "customer"))
+	mux.Handle("POST /api/calendar", authHandler.RequireRole(http.HandlerFunc(calendarHandler.CreateCalendarItem), "system_admin", "admin", "provider", "customer"))
+	mux.Handle("GET /api/calendar/maintenance", authHandler.RequireRole(http.HandlerFunc(calendarHandler.ListMaintenance), "system_admin", "admin"))
+	mux.Handle("POST /api/calendar/maintenance", authHandler.RequireRole(http.HandlerFunc(calendarHandler.CreateMaintenance), "system_admin", "admin"))
+	mux.Handle("PUT /api/calendar/maintenance/{id}", authHandler.RequireRole(http.HandlerFunc(calendarHandler.UpdateMaintenance), "system_admin", "admin"))
 	mux.Handle("GET /api/rentals", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListRentals), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("POST /api/rentals", authHandler.RequireRole(http.HandlerFunc(featureHandler.CreateRental), "system_admin", "admin", "provider"))
 	mux.Handle("GET /api/rentals/{section}", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListRentalModule), "system_admin", "admin", "provider", "customer"))
@@ -150,7 +156,7 @@ func withCORS(next http.Handler) http.Handler {
 		}
 
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)

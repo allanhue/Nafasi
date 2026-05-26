@@ -261,7 +261,7 @@ export default function AnalyticsPage() {
       <Sidebar activeFeature={defaultFeature} />
       <Navbar activeFeature={defaultFeature} />
       <main className="nafasi-sidebar-offset px-4 py-5 transition-all duration-300 sm:px-6 lg:px-8">
-
+        <div className="mx-auto max-w-7xl">
           {error && (
             <div className="mb-6 rounded-lg border border-[#efc7c7] bg-[#fff5f5] p-4 text-sm text-[#9b1c1c]">
               {error}
