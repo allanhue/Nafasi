@@ -200,6 +200,11 @@ func (h *FeatureHandler) createFeature(w http.ResponseWriter, r *http.Request, f
 		writeError(w, http.StatusInternalServerError, "Could not create feature item")
 		return
 	}
+	if err := h.recordFeatureStatusHistory(r, user.ID, item, "", item.Status); err != nil {
+		writeError(w, http.StatusInternalServerError, "Could not record item status")
+		return
+	}
+	_ = h.createDefaultSLATask(r, user.ID, item)
 	h.recordFeatureCreate(r, user, item, "feature.created")
 
 	WriteJSON(w, http.StatusCreated, map[string]any{"item": item})
@@ -243,6 +248,11 @@ func (h *FeatureHandler) createFeatureWithSection(w http.ResponseWriter, r *http
 		writeError(w, http.StatusInternalServerError, "Could not create feature item")
 		return
 	}
+	if err := h.recordFeatureStatusHistory(r, user.ID, item, "", item.Status); err != nil {
+		writeError(w, http.StatusInternalServerError, "Could not record item status")
+		return
+	}
+	_ = h.createDefaultSLATask(r, user.ID, item)
 	h.recordFeatureCreate(r, user, item, "feature.submitted")
 
 	WriteJSON(w, http.StatusCreated, map[string]any{"item": item})
@@ -276,6 +286,53 @@ func (h *FeatureHandler) recordFeatureCreate(r *http.Request, user User, item Fe
 		"request",
 		metadata,
 	)
+}
+
+func (h *FeatureHandler) recordFeatureStatusHistory(r *http.Request, actorID int64, item FeatureItem, fromStatus string, toStatus string) error {
+	metadata, _ := json.Marshal(map[string]string{
+		"title": item.Title,
+	})
+	_, err := h.db.ExecContext(
+		r.Context(),
+		`INSERT INTO feature_item_status_history
+			(feature_item_id, feature_key, section_key, from_status, to_status, changed_by, metadata)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		item.ID,
+		item.FeatureKey,
+		item.SectionKey,
+		fromStatus,
+		toStatus,
+		actorID,
+		json.RawMessage(metadata),
+	)
+	return err
+}
+
+func (h *FeatureHandler) createDefaultSLATask(r *http.Request, ownerID int64, item FeatureItem) error {
+	title := "Follow up " + item.Title
+	description := "Review and move this " + item.SectionKey + " item to the next operational stage."
+	dueAt := time.Now().UTC().Add(48 * time.Hour)
+	metadata, _ := json.Marshal(map[string]string{
+		"featureItemId": IDString(item.ID),
+		"status":        item.Status,
+	})
+
+	_, err := h.db.ExecContext(
+		r.Context(),
+		`INSERT INTO sla_tasks
+			(feature_key, section_key, feature_item_id, title, description, priority, owner_id, due_at, metadata)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+		item.FeatureKey,
+		item.SectionKey,
+		item.ID,
+		title,
+		description,
+		"normal",
+		ownerID,
+		dueAt,
+		json.RawMessage(metadata),
+	)
+	return err
 }
 
 func decodeFeatureCreateRequest(r *http.Request, defaultStatus string) (featureCreateRequest, error) {
