@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { authSessionEvent, readStoredUser } from "@/app/lib/auth";
 import {
   accountThemeStorageKey,
   defaultThemeKey,
@@ -17,10 +18,12 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
 
     syncTheme();
     window.addEventListener("storage", syncTheme);
+    window.addEventListener(authSessionEvent, syncTheme);
     window.addEventListener(themeStorageEvent, syncTheme);
 
     return () => {
       window.removeEventListener("storage", syncTheme);
+      window.removeEventListener(authSessionEvent, syncTheme);
       window.removeEventListener(themeStorageEvent, syncTheme);
     };
   }, []);
@@ -42,6 +45,8 @@ export function applyTheme(themeKey?: string | null) {
   root.style.setProperty("--app-muted", theme.muted);
   root.style.setProperty("--app-border", theme.border);
   root.style.setProperty("--app-accent", theme.accent);
+  root.style.setProperty("--app-subtle", `color-mix(in srgb, ${theme.accent} 10%, ${theme.background})`);
+  root.style.setProperty("--app-hover", `color-mix(in srgb, ${theme.accent} 14%, ${theme.background})`);
 }
 
 function readStoredThemeKey() {
@@ -54,13 +59,8 @@ function readStoredThemeKey() {
 }
 
 function readCurrentAccountId() {
-  try {
-    const storedUser = window.localStorage.getItem("nafasi_user");
-    const user = storedUser ? JSON.parse(storedUser) : null;
-    return user?.email ?? user?.name ?? null;
-  } catch {
-    return null;
-  }
+  const user = readStoredUser();
+  return user?.email ?? user?.name ?? null;
 }
 
 function readLegacyPreferenceTheme() {

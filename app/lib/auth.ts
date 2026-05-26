@@ -14,6 +14,8 @@ export type AuthResponse = {
   user: AuthUser;
 };
 
+export const authSessionEvent = "nafasi-session-updated";
+
 const rawUrl = process.env.NEXT_PUBLIC_API_URL || 
   (process.env.NODE_ENV === "production"   
     ? "https://nafasi-s0ph.onrender.com" 
@@ -50,15 +52,19 @@ export async function authRequest<T>(path: string, body: unknown): Promise<T> {
 }
 
 export function saveSession(auth: AuthResponse) {
-  window.localStorage.setItem("nafasi_token", auth.token);
-  window.localStorage.setItem("nafasi_user", JSON.stringify(auth.user));
-  window.localStorage.setItem("nafasi_session_expires_at", auth.expiresAt);
+  clearPersistentSession();
+  window.sessionStorage.setItem("nafasi_token", auth.token);
+  window.sessionStorage.setItem("nafasi_user", JSON.stringify(auth.user));
+  window.sessionStorage.setItem("nafasi_session_expires_at", auth.expiresAt);
+  window.dispatchEvent(new Event(authSessionEvent));
 }
 
 export function clearSession() {
-  window.localStorage.removeItem("nafasi_token");
-  window.localStorage.removeItem("nafasi_user");
-  window.localStorage.removeItem("nafasi_session_expires_at");
+  window.sessionStorage.removeItem("nafasi_token");
+  window.sessionStorage.removeItem("nafasi_user");
+  window.sessionStorage.removeItem("nafasi_session_expires_at");
+  clearPersistentSession();
+  window.dispatchEvent(new Event(authSessionEvent));
 }
 
 export function getStoredToken() {
@@ -66,7 +72,8 @@ export function getStoredToken() {
     return null;
   }
 
-  return window.localStorage.getItem("nafasi_token");
+  clearPersistentSession();
+  return window.sessionStorage.getItem("nafasi_token");
 }
 
 export function readStoredUser(): AuthUser | null {
@@ -75,7 +82,8 @@ export function readStoredUser(): AuthUser | null {
   }
 
   try {
-    const storedUser = window.localStorage.getItem("nafasi_user");
+    clearPersistentSession();
+    const storedUser = window.sessionStorage.getItem("nafasi_user");
     // Handle cases where stored value is null, "null", or "undefined"
     if (!storedUser || storedUser === "null" || storedUser === "undefined") {
       return null;
@@ -83,7 +91,13 @@ export function readStoredUser(): AuthUser | null {
     return JSON.parse(storedUser) as AuthUser;
   } catch {
     // If parsing fails, clear the invalid data and return null
-    window.localStorage.removeItem("nafasi_user");
+    window.sessionStorage.removeItem("nafasi_user");
     return null;
   }
+}
+
+function clearPersistentSession() {
+  window.localStorage.removeItem("nafasi_token");
+  window.localStorage.removeItem("nafasi_user");
+  window.localStorage.removeItem("nafasi_session_expires_at");
 }

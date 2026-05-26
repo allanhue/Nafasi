@@ -16,14 +16,12 @@ import {
   globalThemeStorageKey,
   themeStorageEvent,
   type ThemeKey,
-  type ThemeScope,
 } from "@/app/lib/themes";
 
 type SetupPreferences = {
   emailNotifications: boolean;
   language: string;
   theme: ThemeKey;
-  themeScope: ThemeScope;
 };
 
 export default function UserSetup() {
@@ -54,12 +52,7 @@ export default function UserSetup() {
     window.localStorage.setItem("nafasi_preferences", JSON.stringify(updated));
 
     if (key === "theme") {
-      saveTheme(value as ThemeKey, updated.themeScope, user);
-      showThemeSync();
-    }
-
-    if (key === "themeScope") {
-      saveTheme(updated.theme, value as ThemeScope, user);
+      saveTheme(value as ThemeKey, user);
       showThemeSync();
     }
   }
@@ -88,7 +81,7 @@ export default function UserSetup() {
                 </p>
               </div>
               <span className="rounded-md border border-[var(--app-border)] px-3 py-2 text-sm font-semibold theme-accent-text">
-                {preferences.themeScope === "system" ? "System theme" : "Account theme"}
+                User theme
               </span>
             </div>
           </section>
@@ -152,8 +145,6 @@ export default function UserSetup() {
                 <div className="border-t border-[var(--app-border)] pt-4">
                   <ThemePicker
                     onChange={(theme) => handlePreferenceChange("theme", theme)}
-                    onScopeChange={(scope) => handlePreferenceChange("themeScope", scope)}
-                    scope={preferences.themeScope}
                     value={preferences.theme}
                   />
                 </div>
@@ -237,19 +228,16 @@ function readStoredPreferences(): SetupPreferences {
 }
 
 function defaultPreferences(): SetupPreferences {
-  return { emailNotifications: true, language: "en", theme: defaultThemeKey, themeScope: "system" };
+  return { emailNotifications: true, language: "en", theme: defaultThemeKey };
 }
 
-function saveTheme(theme: ThemeKey, scope: ThemeScope, user: AuthUser | null) {
+function saveTheme(theme: ThemeKey, user: AuthUser | null) {
   const accountKey = accountThemeStorageKey(accountIdForUser(user));
 
-  if (scope === "system") {
-    window.localStorage.setItem(globalThemeStorageKey, theme);
-    if (accountKey) {
-      window.localStorage.removeItem(accountKey);
-    }
-  } else if (accountKey) {
+  if (accountKey) {
     window.localStorage.setItem(accountKey, theme);
+  } else {
+    window.localStorage.setItem(globalThemeStorageKey, theme);
   }
 
   applyTheme(theme);

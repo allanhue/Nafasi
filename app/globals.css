@@ -7,6 +7,8 @@
   --app-muted: #5d665d;
   --app-border: #d8ddd0;
   --app-accent: #1d3d35;
+  --app-subtle: color-mix(in srgb, var(--app-accent) 10%, var(--background));
+  --app-hover: color-mix(in srgb, var(--app-accent) 14%, var(--background));
   --sidebar-width: 16rem; /* 256px - w-64 */
 }
 
@@ -36,16 +38,16 @@ input {
 .form-input {
   width: 100%;
   border-radius: 0.375rem;
-  border: 1px solid #cfd6c9;
-  background: #ffffff;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
   padding: 0.625rem 0.75rem;
   font-size: 0.875rem;
-  color: #20231f;
+  color: var(--foreground);
   box-shadow: 0 1px 2px rgb(32 35 31 / 0.04);
 }
 
 .form-input::placeholder {
-  color: #8b9488;
+  color: var(--app-muted);
 }
 
 .form-input:focus {
@@ -76,6 +78,79 @@ input {
 
 .theme-accent-text {
   color: var(--app-accent);
+}
+
+/* Bridge existing sage utility classes into the selected theme. */
+.bg-\[\#f5f6f1\] {
+  background-color: var(--background) !important;
+}
+
+.bg-\[\#fbfcf8\],
+.bg-\[\#fbfcf8\]\/95,
+.bg-white {
+  background-color: var(--app-surface) !important;
+}
+
+.bg-\[\#edf1e7\],
+.bg-\[\#eef5df\],
+.bg-\[\#f8faf5\] {
+  background-color: var(--app-subtle) !important;
+}
+
+.hover\:bg-\[\#edf1e7\]:hover,
+.hover\:bg-\[\#f3f4f0\]:hover,
+.hover\:bg-white:hover {
+  background-color: var(--app-hover) !important;
+}
+
+.bg-\[\#1d3d35\],
+.bg-\[\#2d5d4d\],
+.hover\:bg-\[\#0f2419\]:hover,
+.hover\:bg-\[\#142d27\]:hover,
+.hover\:bg-\[\#2d5d4d\]:hover {
+  background-color: var(--app-accent) !important;
+}
+
+.text-\[\#20231f\],
+.text-\[\#354039\],
+.text-\[\#394039\] {
+  color: var(--foreground) !important;
+}
+
+.text-\[\#1d3d35\],
+.text-\[\#2d5d4d\],
+.hover\:text-\[\#1d3d35\]:hover {
+  color: var(--app-accent) !important;
+}
+
+.text-\[\#4b554d\],
+.text-\[\#5d665d\],
+.text-\[\#677067\],
+.text-\[\#788178\],
+.placeholder\:text-\[\#8b9488\]::placeholder {
+  color: var(--app-muted) !important;
+}
+
+.border-\[\#b9c3b2\],
+.border-\[\#cfd6c9\],
+.border-\[\#cfd8c8\],
+.border-\[\#d8ddd0\],
+.border-\[\#e1e5db\],
+.hover\:border-\[\#1d3d35\]:hover,
+.hover\:border-\[\#9aa78f\]:hover {
+  border-color: var(--app-border) !important;
+}
+
+.border-\[\#1d3d35\] {
+  border-color: var(--app-accent) !important;
+}
+
+.ring-\[\#d8ddd0\] {
+  --tw-ring-color: var(--app-border) !important;
+}
+
+.border-t-\[\#1d3d35\] {
+  border-top-color: var(--app-accent) !important;
 }
 
 @media (min-width: 1024px) {

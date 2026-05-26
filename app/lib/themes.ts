@@ -1,5 +1,4 @@
 export type ThemeKey = "sage" | "blue" | "sunrise" | "coastal";
-export type ThemeScope = "system" | "account";
 
 export type AppTheme = {
   accent: string;
