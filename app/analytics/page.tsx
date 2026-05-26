@@ -261,16 +261,6 @@ export default function AnalyticsPage() {
       <Sidebar activeFeature={defaultFeature} />
       <Navbar activeFeature={defaultFeature} />
       <main className="nafasi-sidebar-offset px-4 py-5 transition-all duration-300 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <section className="mb-6 rounded-lg border border-[#d8ddd0] bg-[#fbfcf8] p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#788178]">
-              Dashboard
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">System analytics</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5d665d]">
-              Real-time insights into system usage, user activity, and platform performance.
-            </p>
-          </section>
 
           {error && (
             <div className="mb-6 rounded-lg border border-[#efc7c7] bg-[#fff5f5] p-4 text-sm text-[#9b1c1c]">

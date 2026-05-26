@@ -19,7 +19,7 @@ export const authSessionEvent = "nafasi-session-updated";
 const rawUrl = process.env.NEXT_PUBLIC_API_URL || 
   (process.env.NODE_ENV === "production"   
     ? "https://nafasi-s0ph.onrender.com" 
-    : "");
+    : "http://localhost:8080");
 
 // This safely strips the trailing slash if one exists
 export const API_BASE_URL = rawUrl.replace(/\/$/, "");

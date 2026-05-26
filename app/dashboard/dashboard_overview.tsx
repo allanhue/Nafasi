@@ -37,10 +37,6 @@ export default function DashboardOverview({ activeFeature }: DashboardOverviewPr
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#788178]">
             Quick Access
           </p>
-          <h3 className="mt-2 text-lg font-semibold text-[#20231f]">System Analytics</h3>
-          <p className="mt-2 text-sm text-[#5d665d]">
-            View real-time insights into system usage, user activity, and platform performance.
-          </p>
           <Link
             href="/analytics"
             className="mt-4 inline-block rounded-md bg-[#1d3d35] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0f2419]"
