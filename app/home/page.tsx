@@ -26,14 +26,14 @@ export default function HomePage() {
       <section className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-16">
         <div className="flex flex-col justify-center">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#6f7a68]">
-            Rentals, storage, and events
+            Rentals, storage and events
           </p>
           <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-[#20231f] sm:text-5xl">
             Run every Nafasi workspace from one account.
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-[#5d665d]">
-            Start with a subscription request, create a new account when you are ready, or log in if your account already exists.
-          </p>
+          {/* <p className="mt-5 max-w-2xl text-base leading-7 text-[#5d665d]">
+            Start with a subscription request, create a new account when you are ready or log in if your account already exists.
+          </p> */}
           <div className="mt-7 flex flex-wrap gap-3">
             <Link className="rounded-md bg-[#1d3d35] px-5 py-3 text-sm font-semibold text-white" href="/subscription">
               Choose subscription
