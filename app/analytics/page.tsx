@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LoadingCard } from "@/app/components/loading_overlay";
 import Navbar from "@/app/components/navbar";
 import Sidebar from "@/app/components/sidebar";
 import {
@@ -269,8 +270,8 @@ export default function AnalyticsPage() {
           )}
 
           {loading ? (
-            <div className="text-center py-12">
-              <p className="text-[#5d665d]">Loading analytics...</p>
+            <div className="py-12">
+              <LoadingCard label="Loading analytics data..." />
             </div>
           ) : analytics ? (
             <div className="space-y-6">

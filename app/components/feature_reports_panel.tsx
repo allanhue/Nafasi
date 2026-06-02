@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { LoadingCard } from "@/app/components/loading_overlay";
 import { API_BASE_URL, getStoredToken } from "@/app/lib/auth";
 import type { FeatureKey } from "@/app/lib/features";
 
@@ -87,8 +88,8 @@ export default function FeatureReportsPanel({ featureKey }: { featureKey: Featur
 
   if (isLoading) {
     return (
-      <div className="mt-6 rounded-lg border border-[#e1e5db] bg-white p-6 text-sm text-[#5d665d]">
-        Loading report...
+      <div className="mt-6">
+        <LoadingCard label="Loading report data..." />
       </div>
     );
   }

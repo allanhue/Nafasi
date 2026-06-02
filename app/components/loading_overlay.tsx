@@ -29,3 +29,21 @@ export function ButtonSpinner() {
     />
   );
 }
+
+type LoadingCardProps = {
+  label?: string;
+};
+
+export function LoadingCard({ label = "Loading..." }: LoadingCardProps) {
+  return (
+    <div className="rounded-lg border border-[#e1e5db] bg-white p-5 shadow-sm">
+      <div className="flex items-center gap-3">
+        <span
+          aria-hidden="true"
+          className="inline-block h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-[#d8ddd0] border-t-[#1d3d35]"
+        />
+        <span className="text-sm font-semibold text-[#1d3d35]">{label}</span>
+      </div>
+    </div>
+  );
+}
