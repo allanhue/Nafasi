@@ -8,6 +8,7 @@ import type { AuthUser } from "@/app/lib/auth";
 import { getFeatureSections, type Feature } from "@/app/lib/features";
 import { useSidebar } from "./sidebar_context";
 import {
+  CalendarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   getIconForSection,
@@ -151,6 +152,18 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
                 P
               </span>
               {!isCollapsed && <span>Profile</span>}
+            </Link>
+            <Link
+              className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                pathname === "/calendar" ? "bg-[#1d3d35] text-white" : "text-[#4b554d] hover:bg-[#edf1e7]"
+              } ${isCollapsed ? "justify-center" : ""}`}
+              href="/calendar"
+              title={isCollapsed ? "Calendar" : undefined}
+            >
+              <span className="grid h-5 w-5 place-items-center flex-shrink-0">
+                <CalendarIcon />
+              </span>
+              {!isCollapsed && <span>Calendar</span>}
             </Link>
           </nav>
 

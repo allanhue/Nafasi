@@ -196,6 +196,16 @@ export function SettingsIcon() {
   );
 }
 
+export function CalendarIcon() {
+  return (
+    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M8 2v4M16 2v4M4 9h16" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M6 5h12a2 2 0 0 1 2 2v11a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a2 2 0 0 1 2-2z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8 13h3M8 17h2M14 13h2M14 17h2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function getIconForSection(slug: string): React.ReactNode {
   switch (slug) {
     case "overview":
