@@ -118,12 +118,60 @@ export default function UserSetup() {
             </section>
 
             <section className="theme-surface rounded-lg border p-6">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold">Preferences</h2>
-                  <p className="theme-muted mt-1 text-sm">Control how Nafasi looks and behaves for your team.</p>
-                </div>
+              <h2 className="text-lg font-semibold">System Features</h2>
+              <p className="theme-muted mt-1 text-sm">Powerful tools to manage your operations efficiently.</p>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <FeatureCard
+                  icon="📊"
+                  title="Real-time Dashboard"
+                  description="Monitor all operations with live updates and analytics"
+                />
+                <FeatureCard
+                  icon="📅"
+                  title="Smart Calendar"
+                  description="Interactive month view with event scheduling and reminders"
+                />
+                <FeatureCard
+                  icon="🔔"
+                  title="Notifications"
+                  description="Instant alerts and email notifications for important events"
+                />
+                <FeatureCard
+                  icon="🔐"
+                  title="Role-based Access"
+                  description="Secure permissions system with admin controls"
+                />
+                <FeatureCard
+                  icon="🌍"
+                  title="Multi-language"
+                  description="Support for English and Swahili with easy switching"
+                />
+                <FeatureCard
+                  icon="🎨"
+                  title="Theme Customization"
+                  description="Switch between light, dark, and auto themes"
+                />
+                <FeatureCard
+                  icon="📈"
+                  title="Advanced Reports"
+                  description="Generate detailed reports with export options"
+                />
+                <FeatureCard
+                  icon="🔍"
+                  title="Smart Search"
+                  description="Powerful filtering and search across all modules"
+                />
+                <FeatureCard
+                  icon="💳"
+                  title="Payment Integration"
+                  description="Multiple payment methods for seamless transactions"
+                />
               </div>
+            </section>
+
+            <section className="theme-surface rounded-lg border p-6">
+              <h2 className="text-lg font-semibold">Preferences</h2>
+              <p className="theme-muted mt-1 text-sm">Control how Nafasi looks and behaves for your team.</p>
               <div className="mt-5 grid gap-5">
                 <label className="flex items-center justify-between gap-4 rounded-md border border-[var(--app-border)] bg-white px-4 py-3">
                   <span>
@@ -233,6 +281,77 @@ function StatCard({ label, value }: { label: string; value: string }) {
       <p className="theme-muted text-xs font-semibold uppercase tracking-widest">{label}</p>
       <p className="mt-2 text-lg font-semibold theme-accent-text">{value}</p>
     </article>
+  );
+}
+
+function PaymentMethodCard({ icon, title, description }: { icon: string; title: string; description: string }) {
+  const bgColors: Record<string, string> = {
+    "M-Pesa": "bg-emerald-50 hover:bg-emerald-100",
+    "Airtel Money": "bg-rose-50 hover:bg-rose-100",
+    "Card": "bg-sky-50 hover:bg-sky-100",
+  };
+
+  const borderColors: Record<string, string> = {
+    "M-Pesa": "border-emerald-200 hover:border-emerald-300",
+    "Airtel Money": "border-rose-200 hover:border-rose-300",
+    "Card": "border-sky-200 hover:border-sky-300",
+  };
+
+  const textColors: Record<string, string> = {
+    "M-Pesa": "text-emerald-700",
+    "Airtel Money": "text-rose-700",
+    "Card": "text-sky-700",
+  };
+
+  return (
+    <button
+      className={`${bgColors[title]} ${borderColors[title]} rounded-lg border p-5 transition-all duration-300 hover:shadow-md active:scale-95 cursor-pointer text-left group`}
+      type="button"
+    >
+      <div className="flex items-start gap-4">
+        <div className="text-3xl flex-shrink-0">{icon}</div>
+        <div className="flex-1 min-w-0">
+          <h3 className={`${textColors[title]} font-semibold text-sm`}>{title}</h3>
+          <p className="text-xs text-gray-600 mt-1 leading-relaxed">{description}</p>
+          <div className={`${textColors[title]} text-xs font-medium mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-1`}>
+            Setup now
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function FeatureCard({ icon, title, description }: { icon: string; title: string; description: string }) {
+  const featureColors: Record<string, { bg: string; border: string; text: string }> = {
+    "📊": { bg: "bg-purple-50 hover:bg-purple-100", border: "border-purple-200 hover:border-purple-300", text: "text-purple-700" },
+    "📅": { bg: "bg-blue-50 hover:bg-blue-100", border: "border-blue-200 hover:border-blue-300", text: "text-blue-700" },
+    "🔔": { bg: "bg-orange-50 hover:bg-orange-100", border: "border-orange-200 hover:border-orange-300", text: "text-orange-700" },
+    "🔐": { bg: "bg-red-50 hover:bg-red-100", border: "border-red-200 hover:border-red-300", text: "text-red-700" },
+    "🌍": { bg: "bg-green-50 hover:bg-green-100", border: "border-green-200 hover:border-green-300", text: "text-green-700" },
+    "🎨": { bg: "bg-pink-50 hover:bg-pink-100", border: "border-pink-200 hover:border-pink-300", text: "text-pink-700" },
+    "📈": { bg: "bg-cyan-50 hover:bg-cyan-100", border: "border-cyan-200 hover:border-cyan-300", text: "text-cyan-700" },
+    "🔍": { bg: "bg-indigo-50 hover:bg-indigo-100", border: "border-indigo-200 hover:border-indigo-300", text: "text-indigo-700" },
+    "💳": { bg: "bg-emerald-50 hover:bg-emerald-100", border: "border-emerald-200 hover:border-emerald-300", text: "text-emerald-700" },
+  };
+
+  const colors = featureColors[icon] || { bg: "bg-gray-50 hover:bg-gray-100", border: "border-gray-200 hover:border-gray-300", text: "text-gray-700" };
+
+  return (
+    <div
+      className={`${colors.bg} ${colors.border} rounded-lg border p-4 transition-all duration-300 hover:shadow-md cursor-pointer group`}
+    >
+      <div className="flex items-start gap-3">
+        <div className="text-2xl flex-shrink-0">{icon}</div>
+        <div className="flex-1 min-w-0">
+          <h3 className={`${colors.text} font-semibold text-sm`}>{title}</h3>
+          <p className="text-xs text-gray-600 mt-1 leading-relaxed">{description}</p>
+        </div>
+      </div>
+    </div>
   );
 }
 
