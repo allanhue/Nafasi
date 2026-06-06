@@ -169,6 +169,28 @@ export default function UserSetup() {
             </section>
 
             <section className="theme-surface rounded-lg border p-6">
+              <h2 className="text-lg font-semibold">Payment methods</h2>
+              <p className="theme-muted mt-1 text-sm">Add and manage your preferred payment methods for transactions.</p>
+              <div className="mt-5 grid gap-4 sm:grid-cols-3">
+                <PaymentMethodCard
+                  icon="📱"
+                  title="M-Pesa"
+                  description="Mobile money transfer via Safaricom"
+                />
+                <PaymentMethodCard
+                  icon="💳"
+                  title="Airtel Money"
+                  description="Mobile money via Airtel"
+                />
+                <PaymentMethodCard
+                  icon="🏦"
+                  title="Card"
+                  description="Credit or debit card"
+                />
+              </div>
+            </section>
+
+            <section className="theme-surface rounded-lg border p-6">
               <h2 className="text-lg font-semibold">Quick actions</h2>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <Link
