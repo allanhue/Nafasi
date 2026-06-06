@@ -1,9 +1,35 @@
 import Link from "next/link";
+import {
+  TrendingUp,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  Users,
+  FileText,
+  Target,
+  Zap,
+  Activity,
+} from "lucide-react";
+import StatCard from "@/app/components/stat_card";
 import type { Feature } from "@/app/lib/features";
 
 type DashboardOverviewProps = {
   activeFeature: Feature;
 };
+
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  trending: TrendingUp,
+  check: CheckCircle,
+  clock: Clock,
+  alert: AlertCircle,
+  users: Users,
+  file: FileText,
+  target: Target,
+  zap: Zap,
+  activity: Activity,
+};
+
+const variantMap = ["purple", "blue", "orange", "red", "green", "pink", "cyan", "indigo", "emerald"] as const;
 
 export default function DashboardOverview({ activeFeature }: DashboardOverviewProps) {
   return (
@@ -22,24 +48,25 @@ export default function DashboardOverview({ activeFeature }: DashboardOverviewPr
         </div>
 
         <div className="mt-6 grid gap-3 md:grid-cols-3">
-          {activeFeature.stats.map((stat) => (
-            <div className="rounded-lg border border-[#e1e5db] bg-white p-4" key={stat.label}>
-              <p className="text-sm font-medium text-[#677067]">{stat.label}</p>
-              <p className="mt-3 text-3xl font-semibold tracking-tight text-[#20231f]">
-                {stat.value}
-              </p>
-              <p className="mt-2 text-sm text-[#788178]">{stat.detail}</p>
-            </div>
+          {activeFeature.stats.map((stat, idx) => (
+            <StatCard
+              key={stat.label}
+              title={stat.label}
+              value={stat.value}
+              detail={stat.detail}
+              variant={variantMap[idx % variantMap.length]}
+              icon={iconMap.trending}
+            />
           ))}
         </div>
 
-        <div className="rounded-lg border border-[#d8ddd0] bg-[#eef5df] p-4 shadow-sm sm:p-6">
+        <div className="rounded-lg border border-[#d8ddd0] bg-[#eef5df] p-4 shadow-sm sm:p-6 mt-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#788178]">
             Quick Access
           </p>
           <Link
             href="/analytics"
-            className="mt-4 inline-block rounded-md bg-[#1d3d35] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0f2419]"
+            className="mt-4 inline-block rounded-md bg-[#1d3d35] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0f2419] transition-colors"
           >
             View Analytics →
           </Link>
@@ -79,7 +106,7 @@ export default function DashboardOverview({ activeFeature }: DashboardOverviewPr
           <div className="mt-5 space-y-3">
             {activeFeature.tasks.map((task) => (
               <label
-                className="flex min-h-14 items-center gap-3 rounded-md border border-[#e1e5db] bg-white px-3 py-2 text-sm font-medium text-[#4b554d]"
+                className="flex min-h-14 items-center gap-3 rounded-md border border-[#e1e5db] bg-white px-3 py-2 text-sm font-medium text-[#4b554d] hover:bg-[#f8faf5] transition-colors cursor-pointer"
                 key={task}
               >
                 <input className="h-4 w-4 accent-[#1d3d35]" type="checkbox" />

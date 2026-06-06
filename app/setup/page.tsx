@@ -2,9 +2,21 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import {
+  BarChart3,
+  Calendar,
+  Bell,
+  Lock,
+  Globe,
+  Palette,
+  TrendingUp,
+  Search,
+  CreditCard,
+} from "lucide-react";
 import LoadingOverlay from "@/app/components/loading_overlay";
 import Navbar from "@/app/components/navbar";
 import Sidebar from "@/app/components/sidebar";
+import FeatureCard from "@/app/components/feature_card";
 import { applyTheme } from "@/app/components/theme_provider";
 import ThemePicker from "@/app/components/theme_picker";
 import { clearSession, roleLabels, type AuthUser, readStoredUser } from "@/app/lib/auth";
@@ -122,49 +134,58 @@ export default function UserSetup() {
               <p className="theme-muted mt-1 text-sm">Powerful tools to manage your operations efficiently.</p>
               <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <FeatureCard
-                  icon="📊"
+                  icon={BarChart3}
                   title="Real-time Dashboard"
                   description="Monitor all operations with live updates and analytics"
+                  variant="purple"
                 />
                 <FeatureCard
-                  icon="📅"
+                  icon={Calendar}
                   title="Smart Calendar"
                   description="Interactive month view with event scheduling and reminders"
+                  variant="blue"
                 />
                 <FeatureCard
-                  icon="🔔"
+                  icon={Bell}
                   title="Notifications"
                   description="Instant alerts and email notifications for important events"
+                  variant="orange"
                 />
                 <FeatureCard
-                  icon="🔐"
+                  icon={Lock}
                   title="Role-based Access"
                   description="Secure permissions system with admin controls"
+                  variant="red"
                 />
                 <FeatureCard
-                  icon="🌍"
+                  icon={Globe}
                   title="Multi-language"
                   description="Support for English and Swahili with easy switching"
+                  variant="green"
                 />
                 <FeatureCard
-                  icon="🎨"
+                  icon={Palette}
                   title="Theme Customization"
                   description="Switch between light, dark, and auto themes"
+                  variant="pink"
                 />
                 <FeatureCard
-                  icon="📈"
+                  icon={TrendingUp}
                   title="Advanced Reports"
                   description="Generate detailed reports with export options"
+                  variant="cyan"
                 />
                 <FeatureCard
-                  icon="🔍"
+                  icon={Search}
                   title="Smart Search"
                   description="Powerful filtering and search across all modules"
+                  variant="indigo"
                 />
                 <FeatureCard
-                  icon="💳"
+                  icon={CreditCard}
                   title="Payment Integration"
                   description="Multiple payment methods for seamless transactions"
+                  variant="emerald"
                 />
               </div>
             </section>
@@ -322,36 +343,6 @@ function PaymentMethodCard({ icon, title, description }: { icon: string; title: 
         </div>
       </div>
     </button>
-  );
-}
-
-function FeatureCard({ icon, title, description }: { icon: string; title: string; description: string }) {
-  const featureColors: Record<string, { bg: string; border: string; text: string }> = {
-    "📊": { bg: "bg-purple-50 hover:bg-purple-100", border: "border-purple-200 hover:border-purple-300", text: "text-purple-700" },
-    "📅": { bg: "bg-blue-50 hover:bg-blue-100", border: "border-blue-200 hover:border-blue-300", text: "text-blue-700" },
-    "🔔": { bg: "bg-orange-50 hover:bg-orange-100", border: "border-orange-200 hover:border-orange-300", text: "text-orange-700" },
-    "🔐": { bg: "bg-red-50 hover:bg-red-100", border: "border-red-200 hover:border-red-300", text: "text-red-700" },
-    "🌍": { bg: "bg-green-50 hover:bg-green-100", border: "border-green-200 hover:border-green-300", text: "text-green-700" },
-    "🎨": { bg: "bg-pink-50 hover:bg-pink-100", border: "border-pink-200 hover:border-pink-300", text: "text-pink-700" },
-    "📈": { bg: "bg-cyan-50 hover:bg-cyan-100", border: "border-cyan-200 hover:border-cyan-300", text: "text-cyan-700" },
-    "🔍": { bg: "bg-indigo-50 hover:bg-indigo-100", border: "border-indigo-200 hover:border-indigo-300", text: "text-indigo-700" },
-    "💳": { bg: "bg-emerald-50 hover:bg-emerald-100", border: "border-emerald-200 hover:border-emerald-300", text: "text-emerald-700" },
-  };
-
-  const colors = featureColors[icon] || { bg: "bg-gray-50 hover:bg-gray-100", border: "border-gray-200 hover:border-gray-300", text: "text-gray-700" };
-
-  return (
-    <div
-      className={`${colors.bg} ${colors.border} rounded-lg border p-4 transition-all duration-300 hover:shadow-md cursor-pointer group`}
-    >
-      <div className="flex items-start gap-3">
-        <div className="text-2xl flex-shrink-0">{icon}</div>
-        <div className="flex-1 min-w-0">
-          <h3 className={`${colors.text} font-semibold text-sm`}>{title}</h3>
-          <p className="text-xs text-gray-600 mt-1 leading-relaxed">{description}</p>
-        </div>
-      </div>
-    </div>
   );
 }
 
