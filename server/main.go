@@ -12,7 +12,7 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"nafasi_new/back_nafasi/routes"
+	"nafasi_new/server/routes"
 )
 
 func main() {
