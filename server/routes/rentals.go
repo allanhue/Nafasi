@@ -51,13 +51,6 @@ var featureSections = map[string]map[string]bool{
 		"contracts":          true,
 		"reports":            false,
 	},
-	"spaces": {
-		"events":   true,
-		"bookings": true,
-		"tickets":  true,
-		"blogs":    true,
-		"reports":  false,
-	},
 }
 
 func NewFeatureHandler(db *sql.DB, operations *OperationsHandler) *FeatureHandler {

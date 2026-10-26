@@ -438,7 +438,7 @@ func columnName(index int) string {
 
 func isKnownFeature(featureKey string) bool {
 	switch featureKey {
-	case "rentals", "warehouses", "spaces":
+	case "rentals", "warehouses":
 		return true
 	default:
 		return false
@@ -451,8 +451,6 @@ func reportSections(featureKey string) []string {
 		return []string{"property-listings", "viewing-requests", "applications", "leases"}
 	case "warehouses":
 		return []string{"storage-requests", "warehouse-listings", "logistics-support", "contracts"}
-	case "spaces":
-		return []string{"events", "bookings", "tickets", "blogs"}
 	default:
 		return []string{}
 	}

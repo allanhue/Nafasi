@@ -20,7 +20,7 @@ const plans = [
   {
     name: "Network",
     price: "KES 18,000",
-    detail: "For teams running rentals, warehouses, and event spaces together.",
+    detail: "For teams running rentals and warehouse operations together.",
   },
 ];
 

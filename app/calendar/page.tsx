@@ -606,7 +606,6 @@ function EventModal({
               >
                 <option value="rentals">Rentals</option>
                 <option value="warehouses">Warehouses</option>
-                <option value="spaces">Event spaces</option>
                 <option value="account">General</option>
               </select>
             </Field>

@@ -1,6 +1,6 @@
 export type UserRole = "system_admin" | "admin" | "provider" | "customer";
 
-export type FeatureKey = "rentals" | "warehouses" | "spaces";
+export type FeatureKey = "rentals" | "warehouses";
 
 export type Feature = {
   key: FeatureKey;
@@ -78,11 +78,11 @@ export const features: Feature[] = [
     shortLabel: "Homes",
     route: "/rentals",
     description:
-      "A leasing marketplace for customers looking for homes and providers managing rentable units.",
-    accountFocus: "Property discovery, viewing requests, tenant screening, lease status, and handover.",
-    dashboardTitle: "Rental Portfolio Overview",
-    customerRole: "Tenants search, request viewings, apply, and track lease progress.",
-    providerRole: "Landlords and agents publish units, review leads, schedule viewings, and close leases.",
+      "A mobile-first workspace for landlords and caretakers to manage units, rent, tenants, and maintenance.",
+    accountFocus: "Property and unit status, tenants, rent balances, maintenance, and lease dates.",
+    dashboardTitle: "Rental Operations",
+    customerRole: "Tenants track rent, receive receipts, and report maintenance from a simple portal.",
+    providerRole: "Landlords and caretakers share clear records for units, payments, arrears, and requests.",
     allowedRoles: ["system_admin", "admin", "provider", "customer"],
     modules: [
       {
@@ -103,20 +103,20 @@ export const features: Feature[] = [
       },
     ],
     stats: [
-      { label: "Listed units", value: "48", detail: "38 currently available" },
-      { label: "Tenant leads", value: "126", detail: "24 need follow-up today" },
-      { label: "Occupancy", value: "82%", detail: "Up 6% from last month" },
+      { label: "Units", value: "10", detail: "Across 1 property" },
+      { label: "Occupied", value: "8", detail: "2 units vacant" },
+      { label: "Rent overdue", value: "KES 45,000", detail: "Needs follow-up" },
     ],
     pipeline: [
-      { label: "Viewing requests", value: "31" },
-      { label: "Applications", value: "18" },
-      { label: "Lease drafting", value: "7" },
-      { label: "Move-ins", value: "5" },
+      { label: "Open maintenance requests", value: "3" },
+      { label: "Vacant units", value: "2" },
+      { label: "Viewing requests", value: "4" },
+      { label: "Overdue rent", value: "KES 45,000" },
     ],
     tasks: [
-      "Review new tenant applications",
-      "Confirm Saturday viewing schedule",
-      "Update lease terms for expiring contracts",
+      "Follow up on overdue rent",
+      "Review open maintenance requests",
+      "Confirm pending viewings",
     ],
   },
   {
@@ -164,53 +164,6 @@ export const features: Feature[] = [
       "Verify available square meters by warehouse",
       "Send rates for long-term storage requests",
       "Flag units that need security inspection",
-    ],
-  },
-  {
-    key: "spaces",
-    label: "Event Spaces",
-    shortLabel: "Events",
-    route: "/spaces",
-    description:
-      "A venue marketplace for shows, discos, pop-ups, performances, and hosted events.",
-    accountFocus: "Event discovery, venue booking, ticketing, promoter updates, and show calendars.",
-    dashboardTitle: "Event Space Overview",
-    customerRole: "Customers discover events, reserve tickets, and contact organizers or venues.",
-    providerRole: "Venue owners and promoters publish events, manage bookings, sell tickets, and post updates.",
-    allowedRoles: ["system_admin", "admin", "provider", "customer"],
-    modules: [
-      {
-        title: "Events",
-        description: "Shows, discos, venue dates, performer details, capacity, and event status.",
-      },
-      {
-        title: "Bookings",
-        description: "Venue holds, confirmed bookings, setup needs, promoter requests, and calendar conflicts.",
-      },
-      {
-        title: "Tickets",
-        description: "Ticket tiers, availability, reservations, check-in state, and payment status.",
-      },
-      {
-        title: "Blogs",
-        description: "Promoter stories, event announcements, venue spotlights, and customer-facing updates.",
-      },
-    ],
-    stats: [
-      { label: "Bookable venues", value: "17", detail: "9 ready for weekend events" },
-      { label: "Upcoming shows", value: "28", detail: "12 confirmed this month" },
-      { label: "Booking requests", value: "54", detail: "19 awaiting venue match" },
-    ],
-    pipeline: [
-      { label: "Promoter requests", value: "21" },
-      { label: "Venue holds", value: "13" },
-      { label: "Setup planning", value: "8" },
-      { label: "Confirmed events", value: "12" },
-    ],
-    tasks: [
-      "Match promoters with available venues",
-      "Confirm sound and lighting requirements",
-      "Check event capacity and permit notes",
     ],
   },
 ];

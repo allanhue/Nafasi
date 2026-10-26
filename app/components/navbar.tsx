@@ -5,7 +5,7 @@ import { FormEvent, useEffect, useState } from "react";
 import LoadingOverlay from "@/app/components/loading_overlay";
 import Notifications from "@/app/components/notifications";
 import { API_BASE_URL, type AuthUser, readStoredUser } from "@/app/lib/auth";
-import { features, type Feature } from "@/app/lib/features";
+import type { Feature } from "@/app/lib/features";
 
 type NavbarProps = {
   activeFeature: Feature;
@@ -42,27 +42,31 @@ export default function Navbar({ activeFeature }: NavbarProps) {
             </svg>
             <input
               className="h-10 w-full rounded-md border border-[#d8ddd0] bg-white pl-10 pr-3 text-sm text-[#20231f] shadow-sm placeholder:text-[#8b9488]"
-              placeholder="Search listings, bookings, requests..."
+              placeholder="Search properties, tenants, leases..."
               type="search"
             />
           </label>
 
           <nav className="hidden items-center gap-1 text-sm font-medium text-[#677067] xl:flex">
-            <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/dashboard">
-              Dashboard
-            </Link>
-            <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/analytics">
-              Analytics
-            </Link>
-            {features.map((feature) => (
-              <Link
-                className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]"
-                href={feature.route}
-                key={feature.key}
-              >
-                {feature.label}
-              </Link>
-            ))}
+            {activeFeature.key === "rentals" && (
+              <>
+                <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/dashboard">
+                  Today
+                </Link>
+                <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/rentals/property-listings">
+                  Properties
+                </Link>
+                <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/rentals/applications">
+                  Applications
+                </Link>
+                <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/rentals/leases">
+                  Leases
+                </Link>
+                <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/rentals/reports">
+                  Reports
+                </Link>
+              </>
+            )}
           </nav>
 
           <div className="ml-auto flex shrink-0 items-center gap-2">
@@ -227,4 +231,3 @@ function RightDrawer({
     </div>
   );
 }
-

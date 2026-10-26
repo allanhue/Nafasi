@@ -252,7 +252,7 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mx-4">
             <h2 className="text-xl font-semibold mb-4">Workspace picture</h2>
             <p className="mb-4 text-sm leading-6 text-[#677067]">
-              This picture is shared across Rentals, Warehouses, and Event Spaces for every account on this device.
+              This picture is shared across Rentals and Warehouses for every account on this device.
             </p>
             <div className="mb-4 flex justify-center">
               <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-lg bg-[#1d3d35] text-3xl font-bold text-white">

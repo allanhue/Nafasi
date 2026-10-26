@@ -696,9 +696,8 @@ function generateAnalyticsFromData(
     },
     dailyMetrics: dailyMetrics.length > 0 ? dailyMetrics : generateMockDailyMetrics(),
     featureUsage: [
-      { name: "Rentals", count: 2845, percentage: 45 },
-      { name: "Warehouses", count: 1923, percentage: 31 },
-      { name: "Event Spaces", count: 1866, percentage: 24 },
+      { name: "Rentals", count: 2845, percentage: 60 },
+      { name: "Warehouses", count: 1923, percentage: 40 },
     ],
     userSegmentation: [
       { segment: "Premium Users", count: 287, percentage: 23 },
@@ -760,9 +759,8 @@ function generateMockAnalytics(): AnalyticsData {
     },
     dailyMetrics: generateMockDailyMetrics(),
     featureUsage: [
-      { name: "Rentals", count: 2845, percentage: 45 },
-      { name: "Warehouses", count: 1923, percentage: 31 },
-      { name: "Event Spaces", count: 1866, percentage: 24 },
+      { name: "Rentals", count: 2845, percentage: 60 },
+      { name: "Warehouses", count: 1923, percentage: 40 },
     ],
     userSegmentation: [
       { segment: "Premium Users", count: 287, percentage: 23 },

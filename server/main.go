@@ -78,10 +78,6 @@ func main() {
 	mux.Handle("POST /api/warehouses", authHandler.RequireRole(http.HandlerFunc(featureHandler.CreateWarehouse), "system_admin", "admin", "provider"))
 	mux.Handle("GET /api/warehouses/{section}", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListWarehouseModule), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("POST /api/warehouses/{section}", authHandler.RequireRole(http.HandlerFunc(featureHandler.CreateWarehouseModule), "system_admin", "admin", "provider", "customer"))
-	mux.Handle("GET /api/spaces", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListSpaces), "system_admin", "admin", "provider", "customer"))
-	mux.Handle("POST /api/spaces", authHandler.RequireRole(http.HandlerFunc(featureHandler.CreateSpace), "system_admin", "admin", "provider"))
-	mux.Handle("GET /api/spaces/{section}", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListSpaceModule), "system_admin", "admin", "provider", "customer"))
-	mux.Handle("POST /api/spaces/{section}", authHandler.RequireRole(http.HandlerFunc(featureHandler.CreateSpaceModule), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("GET /api/reports/{feature}", authHandler.RequireRole(http.HandlerFunc(reportHandler.FeatureReport), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("GET /api/reports/{feature}/export", authHandler.RequireRole(http.HandlerFunc(reportHandler.ExportFeatureReport), "system_admin", "admin", "provider", "customer"))
 

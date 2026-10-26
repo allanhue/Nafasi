@@ -69,27 +69,23 @@ func MigrateDB(ctx context.Context, db *sql.DB) error {
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			PRIMARY KEY (role, feature_key),
 			CONSTRAINT role_permissions_role_check CHECK (role IN ('system_admin', 'admin', 'provider', 'customer')),
-			CONSTRAINT role_permissions_feature_check CHECK (feature_key IN ('rentals', 'warehouses', 'spaces', 'dashboard', 'account'))
+			CONSTRAINT role_permissions_feature_check CHECK (feature_key IN ('rentals', 'warehouses', 'dashboard', 'account'))
 		)`,
 		`INSERT INTO role_permissions (role, feature_key, can_read, can_write) VALUES
 			('system_admin', 'rentals', TRUE, TRUE),
 			('system_admin', 'warehouses', TRUE, TRUE),
-			('system_admin', 'spaces', TRUE, TRUE),
 			('system_admin', 'dashboard', TRUE, TRUE),
 			('system_admin', 'account', TRUE, TRUE),
 			('admin', 'rentals', TRUE, TRUE),
 			('admin', 'warehouses', TRUE, TRUE),
-			('admin', 'spaces', TRUE, TRUE),
 			('admin', 'dashboard', TRUE, TRUE),
 			('admin', 'account', TRUE, TRUE),
 			('provider', 'rentals', TRUE, TRUE),
 			('provider', 'warehouses', TRUE, TRUE),
-			('provider', 'spaces', TRUE, TRUE),
 			('provider', 'dashboard', TRUE, FALSE),
 			('provider', 'account', TRUE, TRUE),
 			('customer', 'rentals', TRUE, FALSE),
 			('customer', 'warehouses', TRUE, FALSE),
-			('customer', 'spaces', TRUE, FALSE),
 			('customer', 'dashboard', TRUE, FALSE),
 			('customer', 'account', TRUE, TRUE)
 		ON CONFLICT (role, feature_key) DO NOTHING`,
@@ -105,7 +101,7 @@ func MigrateDB(ctx context.Context, db *sql.DB) error {
 			metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			CONSTRAINT feature_items_feature_check CHECK (feature_key IN ('rentals', 'warehouses', 'spaces'))
+			CONSTRAINT feature_items_feature_check CHECK (feature_key IN ('rentals', 'warehouses'))
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_feature_items_feature_key ON feature_items(feature_key)`,
 		`CREATE INDEX IF NOT EXISTS idx_feature_items_section_key ON feature_items(section_key)`,
@@ -139,7 +135,7 @@ func MigrateDB(ctx context.Context, db *sql.DB) error {
 			metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			CONSTRAINT sla_tasks_feature_check CHECK (feature_key IN ('rentals', 'warehouses', 'spaces', 'account', 'system')),
+			CONSTRAINT sla_tasks_feature_check CHECK (feature_key IN ('rentals', 'warehouses', 'account', 'system')),
 			CONSTRAINT sla_tasks_status_check CHECK (status IN ('open', 'in_progress', 'done', 'cancelled')),
 			CONSTRAINT sla_tasks_priority_check CHECK (priority IN ('low', 'normal', 'high', 'urgent'))
 		)`,
@@ -306,7 +302,7 @@ func MigrateDB(ctx context.Context, db *sql.DB) error {
 			metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			CONSTRAINT calendar_items_feature_check CHECK (feature_key IN ('rentals', 'warehouses', 'spaces', 'account'))
+			CONSTRAINT calendar_items_feature_check CHECK (feature_key IN ('rentals', 'warehouses', 'account'))
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_calendar_items_user_start ON calendar_items(user_id, start_at)`,
 		`CREATE INDEX IF NOT EXISTS idx_calendar_items_feature ON calendar_items(feature_key)`,

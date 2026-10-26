@@ -483,7 +483,7 @@ func maintenancePayload(item MaintenanceWindow) map[string]any {
 
 func isCalendarFeature(value string) bool {
 	switch value {
-	case "rentals", "warehouses", "spaces", "account":
+	case "rentals", "warehouses", "account":
 		return true
 	default:
 		return false

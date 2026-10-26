@@ -3,7 +3,7 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState, type ReactNode } from "react";
 import LoadingOverlay, { ButtonSpinner } from "@/app/components/loading_overlay";
 import { saveWorkspaceQueueItem } from "@/app/components/workspace_queue";
-import { API_BASE_URL, getStoredToken, type AuthUser, readStoredUser } from "@/app/lib/auth";
+import { API_BASE_URL, getStoredToken, readStoredUser } from "@/app/lib/auth";
 import type { Feature, FeatureSection } from "@/app/lib/features";
 
 type ApplicationSubmissionFormProps = {
@@ -51,18 +51,6 @@ const defaultFormConfig: Record<Feature["key"], FormConfig> = {
       { key: "spaceNeeded", label: "Space needed", placeholder: "300 sqm", required: true },
       { key: "goodsType", label: "Goods type", placeholder: "Retail stock" },
       { key: "storageStartDate", label: "Storage start date", type: "date" },
-    ],
-  },
-  spaces: {
-    heading: "Submit booking request",
-    summaryLabel: "Event or venue",
-    summaryPlaceholder: "Live showcase for 150 guests",
-    detailLabel: "Event notes",
-    detailPlaceholder: "Share date flexibility, setup needs, ticketing plan, sound, lighting, and capacity.",
-    fields: [
-      { key: "expectedGuests", label: "Expected guests", placeholder: "150", required: true },
-      { key: "eventDate", label: "Preferred event date", type: "date" },
-      { key: "setupNeeds", label: "Setup needs", placeholder: "Sound, lighting, security" },
     ],
   },
 };
@@ -131,42 +119,11 @@ const moduleFormConfig: Record<string, Partial<FormConfig>> = {
       { key: "accessRules", label: "Access rules", placeholder: "Weekdays only" },
     ],
   },
-  "spaces:events": {
-    heading: "Publish event",
-    summaryLabel: "Event name",
-    detailLabel: "Event description",
-    fields: [
-      { key: "eventDate", label: "Event date", type: "date", required: true },
-      { key: "capacity", label: "Capacity", placeholder: "150" },
-      { key: "performers", label: "Performers", placeholder: "DJ, host, artist" },
-    ],
-  },
-  "spaces:tickets": {
-    heading: "Create ticket request",
-    summaryLabel: "Ticket tier",
-    detailLabel: "Ticket notes",
-    fields: [
-      { key: "price", label: "Ticket price", placeholder: "KES 1,500", required: true },
-      { key: "quantity", label: "Quantity", placeholder: "200" },
-      { key: "salesCloseDate", label: "Sales close date", type: "date" },
-    ],
-  },
-  "spaces:blogs": {
-    heading: "Submit blog post",
-    summaryLabel: "Story title",
-    detailLabel: "Story draft",
-    fields: [
-      { key: "author", label: "Author", placeholder: "Promoter name" },
-      { key: "publishDate", label: "Target publish date", type: "date" },
-      { key: "category", label: "Category", placeholder: "Venue spotlight" },
-    ],
-  },
 };
 
 const apiFeaturePath: Record<Feature["key"], string> = {
   rentals: "rentals",
   warehouses: "warehouses",
-  spaces: "spaces",
 };
 
 export default function ApplicationSubmissionForm({

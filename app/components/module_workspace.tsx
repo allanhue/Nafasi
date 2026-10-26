@@ -134,22 +134,6 @@ function getModuleRows(featureKey: FeatureKey, moduleSlug: string) {
       { title: "Long-term storage", detail: "Quote accepted; access rules need contract wording.", status: "Draft" },
       { title: "Monthly billing", detail: "Recurring invoice dates need finance approval.", status: "Review" },
     ],
-    "spaces:events": [
-      { title: "Live showcase", detail: "Venue capacity and performer setup need confirmation.", status: "Planning" },
-      { title: "Weekend disco", detail: "Ticket tiers are ready for promoter review.", status: "Ready" },
-    ],
-    "spaces:bookings": [
-      { title: "Venue hold", detail: "Customer wants a soft hold while budget is approved.", status: "Hold" },
-      { title: "Setup request", detail: "Sound, lighting, and security notes need venue response.", status: "Open" },
-    ],
-    "spaces:tickets": [
-      { title: "Early bird tier", detail: "Reservation count is rising before the price change.", status: "Active" },
-      { title: "Door list", detail: "Check-in team needs final ticket export.", status: "Due" },
-    ],
-    "spaces:blogs": [
-      { title: "Promoter story", detail: "Draft announcement needs images and publishing date.", status: "Draft" },
-      { title: "Venue spotlight", detail: "Owner interview has been received for editing.", status: "Edit" },
-    ],
   };
 
   return rows[`${featureKey}:${moduleSlug}`] ?? [

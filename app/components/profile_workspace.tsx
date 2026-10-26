@@ -128,7 +128,7 @@ function OverviewPanel({
 
       <section className="grid gap-4 md:grid-cols-3">
         <SummaryCard label="System role" value={user ? roleLabels[user.role] : "Guest"} />
-        <SummaryCard label="Workspaces" value="3" />
+        <SummaryCard label="Workspaces" value="2" />
         <SummaryCard label="Role types" value={String(systemRoles.length)} />
       </section>
 
@@ -487,4 +487,3 @@ function formatAccountDate(value: string) {
     month: "short",
   });
 }
-
