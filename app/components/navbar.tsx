@@ -57,6 +57,9 @@ export default function Navbar({ activeFeature }: NavbarProps) {
                 <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/rentals/leases">
                   Leases
                 </Link>
+                <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/rentals/rent-payments">
+                  Rent Payments
+                </Link>
                 <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/rentals/reports">
                   Reports
                 </Link>

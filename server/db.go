@@ -156,11 +156,23 @@ func MigrateDB(ctx context.Context, db *sql.DB) error {
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_rental_viewings_status ON rental_viewings(status)`,
+		`CREATE TABLE IF NOT EXISTS rental_tenants (
+			id BIGSERIAL PRIMARY KEY,
+			provider_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+			name TEXT NOT NULL,
+			email CITEXT,
+			phone TEXT NOT NULL DEFAULT '',
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_rental_tenants_provider_email
+			ON rental_tenants(provider_id, email) WHERE email IS NOT NULL`,
+		`CREATE INDEX IF NOT EXISTS idx_rental_tenants_provider ON rental_tenants(provider_id)`,
 		`CREATE TABLE IF NOT EXISTS rental_leases (
 			id BIGSERIAL PRIMARY KEY,
 			feature_item_id BIGINT REFERENCES feature_items(id) ON DELETE CASCADE,
 			property_item_id BIGINT REFERENCES feature_items(id) ON DELETE SET NULL,
 			tenant_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+			rental_tenant_id BIGINT REFERENCES rental_tenants(id) ON DELETE RESTRICT,
 			provider_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
 			monthly_rent NUMERIC(12,2) NOT NULL DEFAULT 0,
 			deposit_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
@@ -171,7 +183,73 @@ func MigrateDB(ctx context.Context, db *sql.DB) error {
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)`,
+		`ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS rental_tenant_id BIGINT REFERENCES rental_tenants(id) ON DELETE RESTRICT`,
+		`INSERT INTO rental_tenants (provider_id, name, email)
+			SELECT DISTINCT l.provider_id, u.name, u.email
+			FROM rental_leases l
+			JOIN users u ON u.id = l.tenant_id
+			WHERE l.provider_id IS NOT NULL
+			ON CONFLICT DO NOTHING`,
+		`UPDATE rental_leases l
+			SET rental_tenant_id = t.id
+			FROM rental_tenants t
+			JOIN users u ON lower(u.email::text) = lower(t.email::text)
+			WHERE l.rental_tenant_id IS NULL
+			  AND l.tenant_id = u.id
+			  AND l.provider_id = t.provider_id`,
 		`CREATE INDEX IF NOT EXISTS idx_rental_leases_status ON rental_leases(status)`,
+		`ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS due_day SMALLINT NOT NULL DEFAULT 5`,
+		`CREATE TABLE IF NOT EXISTS rental_invoices (
+			id BIGSERIAL PRIMARY KEY,
+			lease_id BIGINT NOT NULL REFERENCES rental_leases(id) ON DELETE RESTRICT,
+			period_start DATE NOT NULL,
+			due_date DATE NOT NULL,
+			amount NUMERIC(12,2) NOT NULL CHECK (amount > 0),
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			UNIQUE (lease_id, period_start)
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_rental_invoices_lease_due ON rental_invoices(lease_id, due_date)`,
+		`CREATE TABLE IF NOT EXISTS rental_payments (
+			id BIGSERIAL PRIMARY KEY,
+			lease_id BIGINT NOT NULL REFERENCES rental_leases(id) ON DELETE RESTRICT,
+			tenant_id BIGINT REFERENCES users(id) ON DELETE RESTRICT,
+			rental_tenant_id BIGINT NOT NULL REFERENCES rental_tenants(id) ON DELETE RESTRICT,
+			provider_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+			amount NUMERIC(12,2) NOT NULL CHECK (amount > 0),
+			method TEXT NOT NULL CHECK (method IN ('mpesa', 'cash', 'bank')),
+			paid_at DATE NOT NULL,
+			reference TEXT NOT NULL DEFAULT '',
+			notes TEXT NOT NULL DEFAULT '',
+			recorded_by BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+			idempotency_key TEXT NOT NULL UNIQUE,
+			receipt_number TEXT NOT NULL UNIQUE,
+			tenant_name TEXT NOT NULL,
+			unit_name TEXT NOT NULL,
+			landlord_name TEXT NOT NULL,
+			balance_after NUMERIC(12,2) NOT NULL CHECK (balance_after >= 0),
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)`,
+		`ALTER TABLE rental_payments ADD COLUMN IF NOT EXISTS rental_tenant_id BIGINT REFERENCES rental_tenants(id) ON DELETE RESTRICT`,
+		`ALTER TABLE rental_payments ALTER COLUMN tenant_id DROP NOT NULL`,
+		`UPDATE rental_payments p
+			SET rental_tenant_id = l.rental_tenant_id
+			FROM rental_leases l
+			WHERE p.lease_id = l.id
+			  AND p.rental_tenant_id IS NULL
+			  AND l.rental_tenant_id IS NOT NULL`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_rental_payments_provider_reference
+			ON rental_payments(provider_id, reference)
+			WHERE reference <> ''`,
+		`CREATE INDEX IF NOT EXISTS idx_rental_payments_lease_paid_at ON rental_payments(lease_id, paid_at DESC)`,
+		`CREATE TABLE IF NOT EXISTS rental_payment_allocations (
+			id BIGSERIAL PRIMARY KEY,
+			payment_id BIGINT NOT NULL REFERENCES rental_payments(id) ON DELETE RESTRICT,
+			invoice_id BIGINT NOT NULL REFERENCES rental_invoices(id) ON DELETE RESTRICT,
+			amount NUMERIC(12,2) NOT NULL CHECK (amount > 0),
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			UNIQUE (payment_id, invoice_id)
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_rental_payment_allocations_invoice ON rental_payment_allocations(invoice_id)`,
 		`CREATE TABLE IF NOT EXISTS warehouse_capacity (
 			id BIGSERIAL PRIMARY KEY,
 			warehouse_item_id BIGINT REFERENCES feature_items(id) ON DELETE CASCADE,

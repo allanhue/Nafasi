@@ -12,7 +12,9 @@ import (
 
 	_ "github.com/lib/pq"
 
+	"nafasi_new/back_nafasi/model"
 	"nafasi_new/back_nafasi/routes"
+	"nafasi_new/back_nafasi/service"
 )
 
 func main() {
@@ -42,12 +44,17 @@ func main() {
 	}
 	log.Print("owner seed checked")
 
-	operationsHandler := routes.NewOperationsHandler(db)
-	mailer := routes.NewMailerFromEnv()
-	authHandler := routes.NewAuthHandler(db, operationsHandler)
-	featureHandler := routes.NewFeatureHandler(db, operationsHandler)
-	reportHandler := routes.NewReportHandler(db)
-	calendarHandler := routes.NewCalendarHandler(db, operationsHandler, mailer)
+	operationsService := service.NewOperations(model.NewOperations(db))
+	mailerService := service.NewMailerFromEnv()
+	operationsHandler := routes.NewOperationsHandler(operationsService)
+	mailer := routes.NewMailer(mailerService)
+	authHandler := routes.NewAuthHandler(service.NewAuth(model.NewAuth(db), operationsService))
+	featureHandler := routes.NewFeatureHandler(service.NewFeatureItems(model.NewFeatureItems(db), operationsService))
+	rentalFinanceHandler := routes.NewRentalFinanceHandler(service.NewRentalFinance(model.NewRentalFinance(db)))
+	reportHandler := routes.NewReportHandler(service.NewReports(model.NewReports(db)))
+	calendarHandler := routes.NewCalendarHandler(
+		service.NewCalendar(model.NewCalendar(db), operationsService, mailerService),
+	)
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
@@ -74,6 +81,10 @@ func main() {
 	mux.Handle("POST /api/rentals", authHandler.RequireRole(http.HandlerFunc(featureHandler.CreateRental), "system_admin", "admin", "provider"))
 	mux.Handle("GET /api/rentals/{section}", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListRentalModule), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("POST /api/rentals/{section}", authHandler.RequireRole(http.HandlerFunc(featureHandler.CreateRentalModule), "system_admin", "admin", "provider", "customer"))
+	mux.Handle("GET /api/rentals/finance", authHandler.RequireRole(http.HandlerFunc(rentalFinanceHandler.GetWorkspace), "system_admin", "admin", "provider"))
+	mux.Handle("POST /api/rentals/finance/leases", authHandler.RequireRole(http.HandlerFunc(rentalFinanceHandler.CreateLease), "system_admin", "admin", "provider"))
+	mux.Handle("POST /api/rentals/finance/invoices/generate", authHandler.RequireRole(http.HandlerFunc(rentalFinanceHandler.GenerateInvoices), "system_admin", "admin", "provider"))
+	mux.Handle("POST /api/rentals/finance/payments", authHandler.RequireRole(http.HandlerFunc(rentalFinanceHandler.RecordPayment), "system_admin", "admin", "provider"))
 	mux.Handle("GET /api/warehouses", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListWarehouses), "system_admin", "admin", "provider", "customer"))
 	mux.Handle("POST /api/warehouses", authHandler.RequireRole(http.HandlerFunc(featureHandler.CreateWarehouse), "system_admin", "admin", "provider"))
 	mux.Handle("GET /api/warehouses/{section}", authHandler.RequireRole(http.HandlerFunc(featureHandler.ListWarehouseModule), "system_admin", "admin", "provider", "customer"))

@@ -55,13 +55,15 @@ nafasi_new/
 ├── app/
 │   ├── components/        # Reusable React components
 │   ├── lib/               # Utility functions and configurations
-│   ├── rentals/            # Rental property workflows
-│   ├── warehouse/          # Warehouse and storage workflows
+│   ├── rentals/           # Rental property workflows
+│   ├── warehouse/         # Warehouse and storage workflows
 │   └── page.tsx           # Main pages
-├── back_nafasi/           # Go backend server
-│   ├── routes/            # API endpoints
-│   ├── main.go            # Server entry point
-│   └── db.go              # Database configuration
+├── server/                # Go backend server
+│   ├── model/             # Domain/data types and database access
+│   ├── service/           # Business rules and workflow orchestration
+│   ├── routes/            # HTTP decoding, authentication, and responses
+│   ├── main.go            # Dependency wiring and route registration
+│   └── db.go              # Database configuration and migrations
 └── public/                # Static assets
 
 ```
@@ -116,6 +118,7 @@ Manage residential and commercial property rentals.
 - `leases/` - Manage lease agreements
 - `viewing-requests/` - Track property viewings
 - `reports/` - Generate rental reports
+- `rent-payments/` - Record manual rent payments, print receipts, and review balances and arrears
 
 **Key Operations:**
 - Create new property listings with details
@@ -123,6 +126,12 @@ Manage residential and commercial property rentals.
 - Track viewing requests
 - Generate lease agreements
 - Create and manage rental reports
+- Set up a tenant, rent amount, and monthly due day for a listed unit
+- Generate due rent invoices idempotently and allocate payments to the oldest unpaid invoice first
+- Record M-Pesa, cash, or bank payments with references, notes, and the recording user
+- Print receipts and review 1–30, 31–60, 61–90, and 90+ day arrears
+
+Tenant records are scoped to the landlord and do not expose the global user directory. Manual payment records reject amounts above the outstanding invoice balance; tenant credit is not enabled. Invoices, payments, and allocations use additive database tables so this feature does not remove existing rental records. Online payment processing is not part of this workflow.
 
 ---
 
@@ -305,6 +314,10 @@ POST   /api/rentals               # Create rental listing
 GET    /api/rentals/{id}          # Get rental details
 PUT    /api/rentals/{id}          # Update rental
 DELETE /api/rentals/{id}          # Delete rental
+GET    /api/rentals/finance       # Load units, tenants, rent balances, receipts, and arrears
+POST   /api/rentals/finance/leases # Create an active unit tenancy
+POST   /api/rentals/finance/invoices/generate # Generate rent due through today
+POST   /api/rentals/finance/payments # Record and allocate a manual rent payment
 ```
 
 #### Warehouses

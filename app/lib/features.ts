@@ -101,6 +101,10 @@ export const features: Feature[] = [
         title: "Leases",
         description: "Offer terms, deposits, lease milestones, move-in dates, and renewal reminders.",
       },
+      {
+        title: "Rent Payments",
+        description: "Record manual rent, print receipts, track unit balances, and review arrears aging.",
+      },
     ],
     stats: [
       { label: "Units", value: "10", detail: "Across 1 property" },
