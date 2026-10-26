@@ -39,7 +39,9 @@ export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("overview");
 
   useEffect(() => {
-    setUser(readStoredUser());
+    const id = window.setTimeout(() => setUser(readStoredUser()), 0);
+
+    return () => window.clearTimeout(id);
   }, []);
   const canAccess = user?.role === "system_admin" || user?.role === "admin";
 
@@ -108,9 +110,9 @@ export default function AdminSettings() {
           {activeTab === "overview" && (
             <OverviewPanel onSignOut={handleSignOut} user={user} systemRoles={systemRoles} />
           )}
-          {activeTab === "users" && <UsersAndRolesPanel currentUser={user} />}
+          {activeTab === "users" && <UsersAndRolesPanel />}
           {activeTab === "security" && <SecurityPanel onSignOut={handleSignOut} />}
-          {activeTab === "audit" && <AuditPanel currentUser={user} />}
+          {activeTab === "audit" && <AuditPanel />}
         </div>
       </main>
     </div>
@@ -179,7 +181,7 @@ function OverviewPanel({
   );
 }
 
-function UsersAndRolesPanel({ currentUser }: { currentUser: AuthUser | null }) {
+function UsersAndRolesPanel() {
   const [users, setUsers] = useState<AuthUser[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -376,7 +378,7 @@ function SecurityPanel({ onSignOut }: { onSignOut: () => void }) {
   );
 }
 
-function AuditPanel({ currentUser }: { currentUser: AuthUser | null }) {
+function AuditPanel() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
 

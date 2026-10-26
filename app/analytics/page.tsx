@@ -69,6 +69,17 @@ type AnalyticsData = {
   }>;
 };
 
+type NotificationRecord = {
+  kind?: string;
+};
+
+type AuditLogRecord = {
+  action: string;
+  actorId?: number;
+  createdAt: string;
+  summary?: string;
+};
+
 const COLORS = ["#1d3d35", "#2d5d4d", "#3d7d5d", "#4d9d6d", "#5dbd7d", "#6ddd8d"];
 
 export default function AnalyticsPage() {
@@ -81,7 +92,9 @@ export default function AnalyticsPage() {
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
-    setUser(readStoredUser());
+    const id = window.setTimeout(() => setUser(readStoredUser()), 0);
+
+    return () => window.clearTimeout(id);
   }, []);
 
   useEffect(() => {
@@ -611,15 +624,6 @@ function MetricCardWithTrend({
   );
 }
 
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    weekday: "short",
-  });
-}
-
 function formatActivityTime(timestamp: string): string {
   const date = new Date(timestamp);
   const now = new Date();
@@ -637,8 +641,8 @@ function formatActivityTime(timestamp: string): string {
 }
 
 function generateAnalyticsFromData(
-  notifications: any[],
-  auditLogs: any[]
+  notifications: NotificationRecord[],
+  auditLogs: AuditLogRecord[]
 ): AnalyticsData {
   // Group notifications by type
   const notificationsByType: { [key: string]: number } = {};
@@ -654,7 +658,7 @@ function generateAnalyticsFromData(
   });
 
   // Create daily metrics from audit logs
-  const dailyData: { [key: string]: any } = {};
+  const dailyData: Record<string, AnalyticsData["dailyMetrics"][number]> = {};
   auditLogs.forEach((log) => {
     const date = new Date(log.createdAt).toLocaleDateString();
     if (!dailyData[date]) {
@@ -710,7 +714,7 @@ function generateAnalyticsFromData(
       .map((log, index) => ({
         id: index,
         action: log.summary || log.action,
-        user: log.actorID ? `User ${log.actorID}` : "System",
+        user: log.actorId ? `User ${log.actorId}` : "System",
         timestamp: log.createdAt,
         status: Math.random() > 0.1 ? "success" : Math.random() > 0.5 ? "pending" : "failed",
       })),

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChangeEvent, useEffect, useState } from "react";
+import { LogOut, UserRound } from "lucide-react";
 import { clearSession, readStoredUser } from "@/app/lib/auth";
 import type { AuthUser } from "@/app/lib/auth";
 import { getFeatureSections, type Feature } from "@/app/lib/features";
@@ -15,7 +16,7 @@ import {
   HelpIcon,
   PencilIcon,
   SettingsIcon,
-} from "./sidebar_icons";
+} from "./professional_icons";
 
 type SidebarProps = {
   activeFeature: Feature;
@@ -148,8 +149,8 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
               href="/profile"
               title={isCollapsed ? "Profile" : undefined}
             >
-              <span className="grid h-5 w-5 place-items-center rounded-full border border-current text-xs font-semibold flex-shrink-0">
-                P
+              <span className="grid h-5 w-5 place-items-center flex-shrink-0">
+                <UserRound aria-hidden="true" className="h-5 w-5" strokeWidth={1.8} />
               </span>
               {!isCollapsed && <span>Profile</span>}
             </Link>
@@ -191,7 +192,7 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
                 href="/profile"
               >
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-[#e4e8dd] text-xs font-semibold text-[#1d3d35] flex-shrink-0">
-                  N
+                  <UserRound aria-hidden="true" className="h-4 w-4" strokeWidth={1.8} />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[#20231f] text-xs">Profile</span>
@@ -217,11 +218,7 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
                 type="button"
                 title="Sign out"
               >
-                <svg aria-hidden="true" className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M10 17l5-5-5-5" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M15 12H3" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M21 19V5a2 2 0 0 0-2-2h-5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <LogOut aria-hidden="true" className="h-5 w-5 flex-shrink-0" strokeWidth={1.8} />
                 {!isCollapsed && <span>Sign out</span>}
               </button>
               <Link

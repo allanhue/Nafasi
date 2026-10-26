@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Nafasi",
-  description: "Rentals, warehouse storage, and event space operations.",
+  description: "Rental property and warehouse operations.",
 };
 
 export default function RootLayout({

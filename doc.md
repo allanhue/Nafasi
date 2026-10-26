@@ -17,17 +17,16 @@
 
 ## Overview
 
-**Nafasi Limited** is a comprehensive property and event management platform designed to streamline operations across three core business areas:
+**Nafasi Limited** is a property operations platform designed to streamline rentals and warehouse storage:
 
 - **Rentals**: Manage residential and commercial property listings, viewings, and leases
 - **Warehouses**: Handle warehouse inventory, logistics, and storage requests
-- **Event Spaces**: Coordinate bookings, events, and ticketing for event venues
 
-The platform provides an integrated workspace for managing all aspects of property operations, from initial listing to tenant management and reporting.
+The platform provides an integrated workspace for property operations, from listings and tenant management to storage and reporting.
 
 ### Key Objectives
 - Centralized management of multiple property types
-- Real-time calendar and event scheduling
+- Calendar and task scheduling
 - Comprehensive reporting and analytics
 - Secure authentication and role-based access control
 - Mobile-friendly responsive design
@@ -56,7 +55,8 @@ nafasi_new/
 ├── app/
 │   ├── components/        # Reusable React components
 │   ├── lib/               # Utility functions and configurations
-│   ├── [feature]/         # Feature-specific pages (rentals, warehouses, spaces, etc.)
+│   ├── rentals/            # Rental property workflows
+│   ├── warehouse/          # Warehouse and storage workflows
 │   └── page.tsx           # Main pages
 ├── back_nafasi/           # Go backend server
 │   ├── routes/            # API endpoints
@@ -71,7 +71,7 @@ nafasi_new/
 ## Features
 
 ### 1. **Unified Dashboard**
-- Overview of all properties, warehouses, and events
+- Overview of rental properties and warehouses
 - Quick statistics and key metrics
 - Recent activity feed
 - Performance indicators
@@ -86,7 +86,6 @@ nafasi_new/
 ### 3. **Property Management**
 - **Rentals**: Property listings, tenant management, lease agreements
 - **Warehouses**: Storage requests, logistics coordination
-- **Event Spaces**: Venue bookings, event scheduling
 
 ### 4. **User Workspace**
 - Personalized interface per user
@@ -146,22 +145,8 @@ Handle warehouse and storage operations.
 
 ---
 
-### Event Spaces Module (`/spaces`)
-Manage event venues and bookings.
-
-**Pages:**
-- `blogs/` - Event space blog and information
-- `bookings/` - Manage event bookings
-- `events/` - List and manage events
-- `tickets/` - Handle ticketing
-- `reports/` - Generate event reports
-
-**Key Operations:**
-- Create event space listings
-- Process event bookings
-- Manage ticketing system
-- Track events and attendance
-- Generate event reports
+### Retired Spaces module
+The event-space, ticketing, and blog module is no longer active. Its application pages and API routes have been removed. Existing database records are retained; no legacy tables or rows are dropped by this cleanup. Old `/spaces` links temporarily redirect to `/dashboard`.
 
 ---
 
@@ -268,12 +253,12 @@ Nafasi supports three primary payment methods for transactions:
 | Reference | General information |
 | Viewing | Property viewing appointment |
 | Visit | Property or warehouse visit |
-| Event | Event space booking |
+| Event | Calendar appointment |
 | Reminder | Important reminder |
 
 #### Event Details
 - **Title**: Event name
-- **Feature**: Associated module (rentals, warehouses, spaces, account)
+- **Feature**: Associated area (rentals, warehouses, account)
 - **Type**: Event classification
 - **Start/End Time**: Event duration
 - **Location**: Event location
@@ -329,15 +314,6 @@ POST   /api/warehouses            # Create warehouse listing
 GET    /api/warehouses/{id}       # Get warehouse details
 PUT    /api/warehouses/{id}       # Update warehouse
 DELETE /api/warehouses/{id}       # Delete warehouse
-```
-
-#### Event Spaces
-```
-GET    /api/spaces                # Get event space listings
-POST   /api/spaces                # Create event space listing
-GET    /api/spaces/{id}           # Get event space details
-PUT    /api/spaces/{id}           # Update event space
-DELETE /api/spaces/{id}           # Delete event space
 ```
 
 ### Response Format
@@ -461,4 +437,3 @@ For licensing information and support requests, please contact Nafasi Limited di
 ---
 
 **End of Documentation**
-

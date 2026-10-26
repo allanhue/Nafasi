@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Bell, CircleQuestionMark, Search, X } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import LoadingOverlay from "@/app/components/loading_overlay";
 import Notifications from "@/app/components/notifications";
@@ -29,17 +30,11 @@ export default function Navbar({ activeFeature }: NavbarProps) {
         <div className="flex min-h-16 w-full items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <label className="relative hidden min-w-0 flex-1 md:block">
             <span className="sr-only">Search Nafasi</span>
-            <svg
+            <Search
               aria-hidden="true"
               className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#788178]"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path d="m21 21-4.35-4.35" strokeLinecap="round" strokeLinejoin="round" />
-              <circle cx="11" cy="11" r="7" />
-            </svg>
+              strokeWidth={1.8}
+            />
             <input
               className="h-10 w-full rounded-md border border-[#d8ddd0] bg-white pl-10 pr-3 text-sm text-[#20231f] shadow-sm placeholder:text-[#8b9488]"
               placeholder="Search properties, tenants, leases..."
@@ -76,10 +71,7 @@ export default function Navbar({ activeFeature }: NavbarProps) {
               onClick={() => setDrawerMode("notifications")}
               type="button"
             >
-              <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <Bell aria-hidden="true" className="h-5 w-5" strokeWidth={1.8} />
               <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#c2410c]" />
             </button>
             <button
@@ -88,11 +80,7 @@ export default function Navbar({ activeFeature }: NavbarProps) {
               onClick={() => setDrawerMode("help")}
               type="button"
             >
-              <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="9" />
-                <path d="M9.75 9a2.5 2.5 0 1 1 4.1 1.93c-.91.67-1.85 1.21-1.85 2.57" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M12 17h.01" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <CircleQuestionMark aria-hidden="true" className="h-5 w-5" strokeWidth={1.8} />
             </button>
             <Link
               aria-label="Open profile"
@@ -184,10 +172,7 @@ function RightDrawer({
             onClick={onClose}
             type="button"
           >
-            <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M18 6 6 18" strokeLinecap="round" />
-              <path d="m6 6 12 12" strokeLinecap="round" />
-            </svg>
+            <X aria-hidden="true" className="h-5 w-5" strokeWidth={1.8} />
           </button>
         </div>
         <div className="relative space-y-3 p-5">

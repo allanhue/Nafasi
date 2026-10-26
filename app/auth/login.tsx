@@ -42,7 +42,7 @@ export default function Login() {
         </Link>
         <h1 className="mt-6 text-2xl font-semibold tracking-tight">Log in</h1>
         <p className="theme-muted mt-2 text-sm leading-6">
-          Access your rentals, warehouse, and event space workspace.
+          Access your rental and warehouse workspace.
         </p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>

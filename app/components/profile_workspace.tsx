@@ -39,7 +39,9 @@ export default function ProfileWorkspace() {
   const [activeTab, setActiveTab] = useState<AccountTab>("overview");
 
   useEffect(() => {
-    setUser(readStoredUser());
+    const id = window.setTimeout(() => setUser(readStoredUser()), 0);
+
+    return () => window.clearTimeout(id);
   }, []);
 
   function handleSignOut() {
