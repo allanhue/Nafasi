@@ -48,9 +48,10 @@ export default function SignUp() {
     <main className="theme-bg grid min-h-screen place-items-center px-4 py-10">
       <LoadingOverlay isLoading={isSubmitting} label="Creating account..." />
       <section className="theme-surface w-full max-w-md rounded-lg border p-6 shadow-sm">
-        <Link className="text-sm font-semibold theme-accent-text" href="/">
-          Nafasi
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <Link className="text-sm font-semibold theme-accent-text" href="/home">Nafasi</Link>
+          <Link className="text-xs font-semibold theme-muted hover:theme-accent-text" href="/subscription">View plans</Link>
+        </div>
         <h1 className="mt-6 text-2xl font-semibold tracking-tight">Create account</h1>
         <p className="theme-muted mt-2 text-sm leading-6">
           Choose whether you are booking space or providing listings.
