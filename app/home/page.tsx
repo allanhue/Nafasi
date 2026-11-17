@@ -12,6 +12,9 @@ export default function HomePage() {
             <span className="text-base font-semibold">Nafasi</span>
           </Link>
           <nav className="flex items-center gap-2 text-sm font-medium">
+            <Link className="hidden rounded-md px-3 py-2 text-[#4b554d] hover:bg-[#edf1e7] sm:inline-flex" href="/subscription">
+              Plans
+            </Link>
             <Link className="rounded-md px-3 py-2 text-[#4b554d] hover:bg-[#edf1e7]" href="/auth/login">
               Login
             </Link>
@@ -40,6 +43,9 @@ export default function HomePage() {
             </Link>
             <Link className="rounded-lg border border-[#b9c3b2] bg-white px-5 py-3 text-sm font-semibold text-[#1d3d35] transition hover:border-[#1d3d35]" href="/auth/login">
               Sign in
+            </Link>
+            <Link className="rounded-lg border border-transparent px-4 py-3 text-sm font-semibold text-[#1d3d35] transition hover:bg-[#e9f1e8]" href="/subscription">
+              Compare plans
             </Link>
           </div>
           <div className="mt-10 grid max-w-xl gap-4 border-t border-[#d8ddd0] pt-6 sm:grid-cols-3">

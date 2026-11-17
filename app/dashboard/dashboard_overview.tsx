@@ -170,13 +170,6 @@ function RentalTodayDashboard() {
     { label: "Open maintenance", value: "3", detail: "Requests to review", icon: Wrench, tone: "bg-[#f4ecf8] text-[#74448a]" },
   ];
 
-  const actions = [
-    { label: "View properties", href: "/rentals/property-listings", icon: Building2 },
-    { label: "Review applications", href: "/rentals/applications", icon: Users },
-    { label: "Check leases", href: "/rentals/leases", icon: FileText },
-    { label: "View requests", href: "/rentals/viewing-requests", icon: CalendarClock },
-  ];
-
   return (
     <section className="grid gap-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -202,16 +195,16 @@ function RentalTodayDashboard() {
         </Link>
       </header>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {stats.map(({ label, value, detail, icon: Icon, tone }) => (
-          <article className="rounded-xl border border-[#d8ddd0] bg-[#fbfcf8] p-4 shadow-sm sm:p-5" key={label}>
+          <article className="rounded-xl border border-[#d8ddd0] bg-[#fbfcf8] p-3 shadow-sm sm:p-5" key={label}>
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-medium text-[#5d665d]">{label}</p>
-                <p className="mt-3 text-2xl font-semibold tracking-tight text-[#20231f]">{value}</p>
+                <p className="mt-2 text-xl font-semibold tracking-tight text-[#20231f] sm:mt-3 sm:text-2xl">{value}</p>
               </div>
-              <span className={`grid h-10 w-10 place-items-center rounded-lg ${tone}`}>
-                <Icon aria-hidden="true" className="h-5 w-5" />
+              <span className={`grid h-9 w-9 place-items-center rounded-xl ${tone} sm:h-10 sm:w-10`}>
+                <Icon aria-hidden="true" className="h-4 w-4 sm:h-5 sm:w-5" />
               </span>
             </div>
             <p className="mt-3 text-xs text-[#788178]">{detail}</p>
@@ -228,9 +221,10 @@ function RentalTodayDashboard() {
             </div>
             <span className="rounded-full bg-[#fff2df] px-2.5 py-1 text-xs font-semibold text-[#9a5b0a]">3 items</span>
           </div>
-          <div className="mt-5 divide-y divide-[#e7e9e2]">
+          <div className="mt-3 divide-y divide-[#e7e9e2] sm:mt-5">
             <AttentionRow
               color="text-[#a45518]"
+              category="Payment overdue"
               icon={<CircleAlert aria-hidden="true" className="h-5 w-5" />}
               title="John Otieno · Unit B3"
               detail="KES 5,000 overdue"
@@ -239,6 +233,7 @@ function RentalTodayDashboard() {
             />
             <AttentionRow
               color="text-[#74448a]"
+              category="Maintenance"
               icon={<Wrench aria-hidden="true" className="h-5 w-5" />}
               title="Maintenance requests"
               detail="3 open requests need an update"
@@ -247,6 +242,7 @@ function RentalTodayDashboard() {
             />
             <AttentionRow
               color="text-[#354f83]"
+              category="Leasing"
               icon={<CalendarClock aria-hidden="true" className="h-5 w-5" />}
               title="Viewing requests"
               detail="4 visits need confirmation"
@@ -296,35 +292,13 @@ function RentalTodayDashboard() {
         </section>
       </div>
 
-      <section className="rounded-xl border border-[#d8ddd0] bg-[#fbfcf8] p-4 shadow-sm sm:p-6">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold text-[#20231f]">Quick access</h2>
-            <p className="mt-1 text-sm text-[#5d665d]">Go straight to the work you need to do.</p>
-          </div>
-        </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {actions.map(({ label, href, icon: Icon }) => (
-            <Link
-              className="group flex min-h-14 items-center justify-between gap-3 rounded-lg border border-[#e1e5db] bg-white px-4 py-3 text-sm font-semibold text-[#354039] transition hover:border-[#9aa78f] hover:bg-[#f8faf5]"
-              href={href}
-              key={label}
-            >
-              <span className="flex items-center gap-3">
-                <Icon aria-hidden="true" className="h-5 w-5 text-[#1d3d35]" />
-                {label}
-              </span>
-              <ArrowRight aria-hidden="true" className="h-4 w-4 text-[#788178] transition group-hover:translate-x-0.5" />
-            </Link>
-          ))}
-        </div>
-      </section>
     </section>
   );
 }
 
 function AttentionRow({
   color,
+  category,
   icon,
   title,
   detail,
@@ -332,6 +306,7 @@ function AttentionRow({
   action,
 }: {
   color: string;
+  category: string;
   icon: React.ReactNode;
   title: string;
   detail: string;
@@ -340,14 +315,15 @@ function AttentionRow({
 }) {
   return (
     <div className="flex items-center gap-3 py-4 first:pt-5 last:pb-0">
-      <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#f3f4f0] ${color}`}>
+      <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#f3f4f0] ${color}`}>
         {icon}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-[#20231f]">{title}</p>
+        <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${color} bg-[#f3f4f0]`}>{category}</span>
+        <p className="mt-1 truncate text-sm font-semibold text-[#20231f]">{title}</p>
         <p className="mt-1 text-xs text-[#5d665d]">{detail}</p>
       </div>
-      <Link className="shrink-0 text-xs font-semibold text-[#1d3d35] hover:underline" href={href}>
+      <Link className="shrink-0 rounded-lg border border-[#d8ddd0] bg-white px-3 py-2 text-xs font-semibold text-[#1d3d35] hover:bg-[#edf1e7]" href={href}>
         {action}
       </Link>
     </div>

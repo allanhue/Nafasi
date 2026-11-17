@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChangeEvent, useEffect, useState } from "react";
-import { LogOut, UserRound } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { clearSession, readStoredUser } from "@/app/lib/auth";
 import type { AuthUser } from "@/app/lib/auth";
 import { getFeatureSections, type Feature } from "@/app/lib/features";
@@ -27,6 +27,7 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
   const router = useRouter();
   const { isCollapsed, setIsCollapsed } = useSidebar();
   const menu = getFeatureSections(activeFeature);
+  const mobileMenu = menu.filter((item) => ["overview", "property-listings", "storage-requests", "applications", "leases", "warehouse-listings", "contracts"].includes(item.slug)).slice(0, 4);
   const [showEditModal, setShowEditModal] = useState(false);
   const [workspaceImage, setWorkspaceImage] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -144,18 +145,6 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
             })}
             <Link
               className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                pathname === "/profile" ? "bg-[#1d3d35] text-white" : "text-[#4b554d] hover:bg-[#edf1e7]"
-              } ${isCollapsed ? "justify-center" : ""}`}
-              href="/profile"
-              title={isCollapsed ? "Profile" : undefined}
-            >
-              <span className="grid h-5 w-5 place-items-center flex-shrink-0">
-                <UserRound aria-hidden="true" className="h-5 w-5" strokeWidth={1.8} />
-              </span>
-              {!isCollapsed && <span>Profile</span>}
-            </Link>
-            <Link
-              className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                 pathname === "/calendar" ? "bg-[#1d3d35] text-white" : "text-[#4b554d] hover:bg-[#edf1e7]"
               } ${isCollapsed ? "justify-center" : ""}`}
               href="/calendar"
@@ -186,20 +175,6 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
                 </span>
               )}
             </Link>
-            {!isCollapsed && (
-              <Link
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-[#4b554d] hover:bg-[#edf1e7] transition-colors mb-3"
-                href="/profile"
-              >
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-[#e4e8dd] text-xs font-semibold text-[#1d3d35] flex-shrink-0">
-                  <UserRound aria-hidden="true" className="h-4 w-4" strokeWidth={1.8} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[#20231f] text-xs">Profile</span>
-                  <span className="block truncate text-xs text-[#788178]">Account</span>
-                </span>
-              </Link>
-            )}
             <div className="flex flex-col gap-2">
               <Link
                 className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors justify-center ${
@@ -243,6 +218,22 @@ export default function Sidebar({ activeFeature }: SidebarProps) {
           </div>
         </div>
       </aside>
+
+      <nav aria-label="Primary navigation" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-[#d8ddd0] bg-[#fbfcf8]/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(32,35,31,0.08)] backdrop-blur lg:hidden">
+        {mobileMenu.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link className={`flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-[10px] font-semibold ${isActive ? "text-[#1d3d35]" : "text-[#788178]"}`} href={item.href} key={item.slug}>
+              <span className={`grid h-8 w-9 place-items-center rounded-xl ${isActive ? "bg-[#e9f1e8]" : ""}`}>{getIconForSection(item.slug)}</span>
+              <span className="max-w-full truncate">{item.title}</span>
+            </Link>
+          );
+        })}
+        <Link className={`flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-[10px] font-semibold ${pathname === settingsPath ? "text-[#1d3d35]" : "text-[#788178]"}`} href={settingsPath}>
+          <span className={`grid h-8 w-9 place-items-center rounded-xl ${pathname === settingsPath ? "bg-[#e9f1e8]" : ""}`}><SettingsIcon /></span>
+          <span>{isAdmin ? "Settings" : "Setup"}</span>
+        </Link>
+      </nav>
 
       {showEditModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center lg:ml-0">

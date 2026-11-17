@@ -62,3 +62,8 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
 ## License MIT
 
 Private and confidential. All rights reserved.
+
+## Interface documentation
+
+See [docs/interface-refactor.md](docs/interface-refactor.md) for the November 2026 navigation and dashboard clarity changes, navigation map, design intent, and follow-up backlog.
+

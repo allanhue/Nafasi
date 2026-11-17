@@ -64,7 +64,8 @@ export default function SubscriptionPage() {
       <LoadingOverlay isLoading={isSubmitting} label="Sending..." />
       <div className="mx-auto w-full max-w-7xl">
         <div className="flex items-center justify-between gap-4">
-          <Link className="text-sm font-semibold text-[#1d3d35]" href="/home">
+          <Link className="flex items-center gap-2 text-sm font-semibold text-[#1d3d35]" href="/home">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#1d3d35] text-xs font-bold text-white">N</span>
             Nafasi
           </Link>
           <Link className="rounded-md px-3 py-2 text-sm font-semibold text-[#4b554d] hover:bg-[#edf1e7]" href="/auth/login">
@@ -81,7 +82,7 @@ export default function SubscriptionPage() {
               Pick a plan, then create your Nafasi account.
             </h1>
             <p className="mt-4 text-base leading-7 text-[#5d665d]">
-              Send your subscription interest to the Nafasi team. After that, sign up as a customer or provider. Existing users can go straight to login.
+              Compare the workspace options, choose a plan, then send your interest to our team. You can create an account now or return to finish later.
             </p>
 
             <div className="mt-6 grid gap-3">

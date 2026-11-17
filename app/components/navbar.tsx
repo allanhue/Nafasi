@@ -28,7 +28,14 @@ export default function Navbar({ activeFeature }: NavbarProps) {
     <>
       <header className="nafasi-sidebar-offset sticky top-0 z-30 border-b border-[#d8ddd0] bg-[#fbfcf8]/95 backdrop-blur transition-all duration-300">
         <div className="flex min-h-16 w-full items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
-          <label className="relative hidden min-w-0 flex-1 md:block">
+          <div className="hidden min-w-0 items-center gap-3 md:flex">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#1d3d35] text-sm font-bold text-white">N</span>
+            <div>
+              <p className="text-sm font-semibold leading-5 text-[#20231f]">Nafasi</p>
+              <p className="text-xs text-[#788178]">{activeFeature.shortLabel} workspace</p>
+            </div>
+          </div>
+          <label className="relative hidden min-w-0 max-w-xl flex-1 md:block">
             <span className="sr-only">Search Nafasi</span>
             <Search
               aria-hidden="true"
@@ -41,31 +48,6 @@ export default function Navbar({ activeFeature }: NavbarProps) {
               type="search"
             />
           </label>
-
-          <nav className="hidden items-center gap-1 text-sm font-medium text-[#677067] xl:flex">
-            {activeFeature.key === "rentals" && (
-              <>
-                <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/dashboard">
-                  Today
-                </Link>
-                <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/rentals/property-listings">
-                  Properties
-                </Link>
-                <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/rentals/applications">
-                  Applications
-                </Link>
-                <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/rentals/leases">
-                  Leases
-                </Link>
-                <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/rentals/rent-payments">
-                  Rent Payments
-                </Link>
-                <Link className="rounded-md px-3 py-2 hover:bg-[#edf1e7] hover:text-[#20231f]" href="/rentals/reports">
-                  Reports
-                </Link>
-              </>
-            )}
-          </nav>
 
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <button
